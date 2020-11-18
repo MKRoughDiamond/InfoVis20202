@@ -1,0 +1,27 @@
+<html>
+<body>
+</body>
+<script>
+const host = '147.46.215.63';
+const port = '37373';
+const url= "http://"+host+port;
+d= fetch(url, {
+    method: "POST",
+    body: JSON.stringify({opcode:'img',content:'asdfasdf'})
+}).then(
+    function(response) {
+        if (!response.ok)
+        {
+            console.log("Error");
+            return;
+        }
+        return response.json();
+    }
+);
+d.then((s) => {
+    var image = new Image();
+    image.src = 'data:image/jpg;base64,'+s.img;
+    document.body.appendChild(image);
+});
+</script>
+</html>
