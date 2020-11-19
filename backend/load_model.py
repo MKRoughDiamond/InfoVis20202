@@ -14,9 +14,10 @@ def get_model(model_name="betaB"):
     :return: model,
         model.latent_dim: latent dim 크기 (betaB: 10)
         model.img_size: 이미지 크기 ([1, 32, 32])
-        self.num_pixels = self.img_size[1] * self.img_size[2]
-        self.encoder = encoder(img_size, self.latent_dim)
-        self.decoder = decoder(img_size, self.latent_dim)
+        model.num_pixels: 32*32
+        model.encoder: 모델 인코더
+        model.decoder: 모델 디코더
+        model.forward(): returns reconstruct, [mu, logvar], latent_sample
     '''
     model_list = ["betaB", "betaH", "btcvae", "factor", "VAE"]
     assert model_name in model_list
