@@ -54,3 +54,26 @@ For InfoVis 2020 final project
 	]
 }
 ```
+
+
+3. Get min and max of each dimension
+    - ~ : Real number
+- Frontend Query (POST)
+```
+{
+    opcode: 'min_max',
+    content: []
+}
+```
+- Backend Response
+```
+{
+	opcode: 'min_max',
+	content: [
+		{
+            'min': [~,...,~],
+            'max': [~,...,~]
+		}
+    ]
+}
+```
