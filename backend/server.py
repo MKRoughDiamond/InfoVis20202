@@ -56,7 +56,7 @@ class DLModelServer(BaseHTTPRequestHandler):
             if dic['opcode'] == 'tsne':
                 imgs, latents, tsnes, ys = ptmodule.tsne_visualization(100)
                 for i in range(len(imgs)):
-                    img = Image.fromarray(imgs[i]).convert('RGB')
+                    img = Image.fromarray(imgs[i]*255).convert('RGB')
                     res_contents.append({
                         'latent': latents[i].tolist(),
                         'img': self._img_to_base64(img),
@@ -69,7 +69,7 @@ class DLModelServer(BaseHTTPRequestHandler):
                     self._set_headers_failed()
                     return
                 for i in range(len(imgs)):
-                    img = Image.fromarray(imgs[i]).convert('RGB')
+                    img = Image.fromarray(imgs[i]*255).convert('RGB')
                     res_contents.append({
                         'latent': latents[i].tolist(),
                         'img': self._img_to_base64(img)

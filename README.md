@@ -36,10 +36,12 @@ For InfoVis 2020 final project
 ```
 {
 	opcode: 'latent_imgs'
-	content: {
-		latent: [~,...,~],
-		target_idx: [a,b]
-	}
+	content: [
+        {
+		    latent: [~,...,~],
+		    target_idx: [a,b]
+	    }
+    ]
 }
 ```
 - Backend Response
