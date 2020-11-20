@@ -60,6 +60,16 @@ class DLModelServer(BaseHTTPRequestHandler):
                 # TODO: Select n points with given latent and target dimensions
                 # TODO: Reconstruction
                 pass
+            elif dic['opcode'] == 'min_max':
+                mins, maxs = ptmodule.get_min_max()
+                if mins is None or maxs is None:
+                    self._set_headers_failed()
+                    return
+                else:
+                    res_contents.append({
+                        'min': mins,
+                        'max': maxs
+                    })
             else:
                 self._set_headers_failed()
                 return

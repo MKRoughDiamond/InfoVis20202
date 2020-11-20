@@ -24,6 +24,9 @@ class PyTorchModule:
             self.small_data = None
             self.tsne_length = None
 
+        self.mins = None
+        self.maxs = None
+
 
 
     def set_model(self,modelname):
@@ -50,6 +53,12 @@ class PyTorchModule:
         return data_x, data_y
 
 
+    def get_min_max(self):
+        if self.mins is None or self.maxs is None:
+            return None,None
+        return self.mins.cpu().detach().numpy().tolist(), self.maxs.cpu().detach().numpy().tolist()
+
+
     def tsne_visualization(self,length):
         if self.small_data is not None or length != self.tsne_length:
             x, y = self.small_data
@@ -57,6 +66,8 @@ class PyTorchModule:
             x, y = self._data_load(length)
             self.tsne_length = length
         recon_img, _, latent = self.model(x)
+        self.mins = torch.min(latent,0)[0]
+        self.maxs = torch.max(latent,0)[0]
         recon_img = recon_img.squeeze().cpu().detach().numpy()
         latent = latent.cpu().detach().numpy()
         tsne = TSNE(n_components=2).fit_transform(latent)
