@@ -17,22 +17,30 @@ class DLModelServer(BaseHTTPRequestHandler):
 
 
     def _set_headers_failed(self):
+        self.send_response(400)
+        self.send_header('Content-type', 'text/html')
+        self.send_header('Access-Control-Allow-Origin','*')
+        self.end_headers()
+        self.wfile.write(bytes(json.dumps({}),'utf-8'))
+
+
+    def _set_headers_not_found(self):
         self.send_response(404)
         self.send_header('Content-type', 'text/html')
         self.send_header('Access-Control-Allow-Origin','*')
         self.end_headers()
+        self.wfile.write(bytes(json.dumps({}),'utf-8'))
 
 
-    def _set_headers(self,type_):
+    def _set_headers_success(self):
         self.send_response(200,"ok")
-        self.send_header('Content-type', type_)
+        self.send_header('Content-type', 'application/json')
         self.send_header('Access-Control-Allow-Origin','*')
         self.end_headers()
 
 
     def do_GET(self):
-        self._set_headers('application/json')
-        self.wfile.write(bytes(json.dumps({}),'utf-8'))
+        pass
 
 
     def do_OPTIONS(self):
@@ -40,7 +48,6 @@ class DLModelServer(BaseHTTPRequestHandler):
 
 
     def do_POST(self):
-        self._set_headers('application/json')
         content_len = int(self.headers.get('content-length'))
         contents = self.rfile.read(content_len).decode('utf-8')
         try:
@@ -56,11 +63,18 @@ class DLModelServer(BaseHTTPRequestHandler):
                         'tsne_pos': tsnes[i].tolist(),
                         'label': int(ys[i])
                     })
-            elif dic['opcode'] == 'latent_imgs':
-                # TODO: Select n points with given latent and target dimensions
-                # TODO: Reconstruction
-                pass
-            elif dic['opcode'] == 'min_max':
+            elif dic['opcode'] == 'latent_imgs': # TSNE visualization first, O.W. returns 404
+                imgs, latents = ptmodule.latent_imgs_gen(dic['content'][0]['latent'],dic['content'][0]['target_idx'])
+                if imgs is None or latents is None:
+                    self._set_headers_failed()
+                    return
+                for i in range(len(imgs)):
+                    img = Image.fromarray(imgs[i]).convert('RGB')
+                    res_contents.append({
+                        'latent': latents[i].tolist(),
+                        'img': self._img_to_base64(img)
+                    })
+            elif dic['opcode'] == 'min_max': # TSNE visualization first, O.W. returns 404
                 mins, maxs = ptmodule.get_min_max()
                 if mins is None or maxs is None:
                     self._set_headers_failed()
@@ -71,8 +85,9 @@ class DLModelServer(BaseHTTPRequestHandler):
                         'max': maxs
                     })
             else:
-                self._set_headers_failed()
+                self._set_headers_not_found()
                 return
+            self._set_headers_success()
             response = {
                 'opcode': dic['opcode'],
                 'content': res_contents

@@ -7,7 +7,7 @@ from load_model import *
 from sklearn.manifold import TSNE
 
 class PyTorchModule:
-    def __init__(self,dataset_name,modelname=None,preload=True):
+    def __init__(self,dataset_name,modelname=None,preload=True,tile_shape=(5,5)):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.set_model(modelname)
 
@@ -27,6 +27,10 @@ class PyTorchModule:
         self.mins = None
         self.maxs = None
 
+        self.tile_shape = tile_shape
+
+        self.tile_x = torch.arange(tile_shape[1],dtype=torch.float32).unsqueeze(0).repeat(tile_shape[0],1).to(self.device)/(tile_shape[1]-1)
+        self.tile_y = torch.arange(tile_shape[0],dtype=torch.float32).unsqueeze(0).repeat(tile_shape[1],1).transpose(0,1).to(self.device)/(tile_shape[0]-1)
 
 
     def set_model(self,modelname):
@@ -34,6 +38,15 @@ class PyTorchModule:
             self.model = get_model().to(self.device).eval()
         else:
             self.model = get_model(modelname).to(self.device).eval()
+
+
+    def _latent_gen(self,latent,axes):
+        latent = torch.tensor(latent,device=self.device,dtype=torch.float32)
+        dup = latent.unsqueeze(-1).unsqueeze(-1).repeat(1,self.tile_shape[0],self.tile_shape[1])
+        dup[axes[0]]=(1-self.tile_x)*self.mins[axes[0]]+self.tile_x*self.maxs[axes[0]]
+        dup[axes[1]]=(1-self.tile_y)*self.mins[axes[1]]+self.tile_y*self.maxs[axes[1]]
+        dup = dup.view(-1,self.tile_shape[0]*self.tile_shape[1]).transpose(0,1)
+        return dup
 
 
     def _data_load(self,length):
@@ -51,6 +64,14 @@ class PyTorchModule:
                 data_x = torch.cat(data_x,dim=0)
                 break
         return data_x, data_y
+
+
+    def latent_imgs_gen(self,latent,axes):
+        if self.mins is None or self.maxs is None:
+            return None, None
+        dup = self._latent_gen(latent,axes)
+        recon_img = self.model.decoder(dup)
+        return recon_img.squeeze().cpu().detach().numpy(), dup.cpu().detach().numpy()
 
 
     def get_min_max(self):
