@@ -50,7 +50,6 @@ class DLModelServer(BaseHTTPRequestHandler):
     def do_POST(self):
         content_len = int(self.headers.get('content-length'))
         contents = self.rfile.read(content_len).decode('utf-8')
-        print(contents)
         try:
             dic = json.loads(contents)
             res_contents = []

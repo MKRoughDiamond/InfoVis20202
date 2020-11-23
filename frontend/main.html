@@ -49,11 +49,13 @@
         tsne.then((data) => {
 	data = data.content;
             circles = svgA.selectAll('circle').data(data).enter().append('circle');
+    let xRange = d3.max(data,d => d.tsne_pos[0]) - d3.min(data, d=> d.tsne_pos[0]);
+    let yRange = d3.max(data,d => d.tsne_pos[1]) - d3.min(data, d=> d.tsne_pos[1]);
 	let xScale = d3.scaleLinear()
-		.domain([d3.min(data, d => d.tsne_pos[0]), d3.max(data, d => d.tsne_pos[0])])
+		.domain([d3.min(data, d => d.tsne_pos[0])-xRange*0.1, d3.max(data, d => d.tsne_pos[0])+xRange*0.1])
 		.range([5, AWidth-5]);
 	let yScale = d3.scaleLinear()
-		.domain([d3.min(data, d => d.tsne_pos[1]), d3.max(data, d => d.tsne_pos[1])])
+		.domain([d3.min(data, d => d.tsne_pos[1])-yRange*0.1, d3.max(data, d => d.tsne_pos[1])+yRange*0.1])
 		.range([ABHeight-5, 5]);
 	circles.style('fill', `rgb(0, 0, 0)`)
 	      .attr('r', 5)
