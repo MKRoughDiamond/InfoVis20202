@@ -1,2 +1,5 @@
 /backend/MNIST
 __pycache__
+
+.idea/
+/.idea/
