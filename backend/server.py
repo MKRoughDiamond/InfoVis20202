@@ -64,6 +64,14 @@ class DLModelServer(BaseHTTPRequestHandler):
                         'label': int(ys[i])
                     })
             elif dic['opcode'] == 'latent_imgs': # TSNE visualization first, O.W. returns 404
+                try:
+                    for i in range(len(dic['content'][0]['latent'])):
+                        dic['content'][0]['latent'][i] = float(dic['content'][0]['latent'][i])
+                    for i in [0,1]:
+                        dic['content'][0]['target_idx'][i] = int(dic['content'][0]['target_idx'][i])
+                except Exception:
+                    self._set_headers_failed()
+                    return
                 imgs, latents = ptmodule.latent_imgs_gen(dic['content'][0]['latent'],dic['content'][0]['target_idx'])
                 if imgs is None or latents is None:
                     self._set_headers_failed()
