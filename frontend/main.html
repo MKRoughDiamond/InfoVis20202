@@ -1,7 +1,67 @@
-﻿<html>
+<html>
+<head>
+    <style type="text/css">
+        .styleB {
+            border: thin solid blue;
+        }
+
+        .slidecontainer {
+            width: 100%; /* Width of the outside container */
+        }
+
+        /* The slider itself */
+        .slider {
+            -webkit-appearance: none; /* Override default CSS styles */
+            appearance: none;
+            width: 100%; /* Full-width */
+            height: 25px; /* Specified height */
+            background: #d3d3d3; /* Grey background */
+            outline: none; /* Remove outline */
+            opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+            -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+            transition: opacity .2s;
+        }
+
+        /* Mouse-over effects */
+        .slider:hover {
+            opacity: 1; /* Fully shown on mouse-over */
+        }
+
+        /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none; /* Override default look */
+            appearance: none;
+            width: 25px; /* Set a specific slider handle width */
+            height: 25px; /* Slider handle height */
+            background: #4CAF50; /* Green background */
+            cursor: pointer; /* Cursor on hover */
+        }
+
+        .slider::-moz-range-thumb {
+            width: 25px; /* Set a specific slider handle width */
+            height: 25px; /* Slider handle height */
+            background: #4CAF50; /* Green background */
+            cursor: pointer; /* Cursor on hover */
+        }
+    </style>
+</head>
 <body>
-    <h1>High-Dimensional Latent Space Visualization</h1>
-    <h2>InfoVis 2020 Term Project - Group E</h2>
+<h1>High-Dimensional Latent Space Visualization</h1>
+<h2>InfoVis 2020 Term Project - Group E</h2>
+
+
+<div style="width: 1300px; height: 400px">
+    <div id="A" style="float: left; width: 500px; height: 400px"></div>
+    <div id="B" style="float: right; width: 790px; height: 400px">
+        <div id="B_slider" style="float: left; width:380px; height:400px" class="styleB">
+            <button id="update">update</button>
+        </div>
+        <div id="B_image" style="float: right; width:400px; height:400px" class="styleB"></div>
+    </div>
+</div>
+<div style="width: 1300px; height: 400px">
+    <div id="C" style="float: left; width: 1300px; height: 400px"></div>
+</div>
 </body>
 <script src="https://d3js.org/d3.v6.min.js"></script>
 <script src="config.js"></script>
@@ -14,6 +74,11 @@
     const ABHeight =400;
     const CWidth = 1300;
     const CHeight = 400;
+    const num_latent = 6;
+
+    let dimension_range = {'min': [], 'max': []};
+    let target_idx = []; //[0, 1];
+    let latent_values = []; //[10, 28, 57, 42, 55, 66];
   
     let svg = d3.select('body').append('svg')
 	.attr('width', Math.max(CWidth, AWidth + BWidth + margin.internal) + margin.left + margin.right)
@@ -76,9 +141,204 @@
         });
     }
 
+    function makeDimension(i, min_value, max_value) {
+        let div = document.createElement('div')
+        div.setAttribute('style', 'height: ' + (360 / num_latent).toString())
+
+        let div_checkbox = document.createElement('div')
+        div_checkbox.setAttribute('style', "float:left; width:30px")
+
+        let checkbox = document.createElement('input')
+        checkbox.setAttribute('type', 'checkbox')
+        checkbox.setAttribute('name', 'latent')
+        checkbox.setAttribute('value', i)
+        checkbox.setAttribute('class', 'checkbox')
+        checkbox.setAttribute('style', "width:20px; height:20px;")
+        if (i < 2) {
+            checkbox.setAttribute('checked', '')
+        }
+        checkbox.innerHTML = i.toString()
+
+        div_checkbox.appendChild(checkbox)
+        div.appendChild(div_checkbox)
+
+        let div_min = document.createElement('div')
+        div_min.setAttribute('style', "float:left; width:30px")
+        div_min.innerHTML = min_value
+        div.appendChild(div_min)
+
+        let div_slider = document.createElement('div')
+        div_slider.setAttribute('style', "float:left; width:280px")
+
+        let slider_input = document.createElement('input')
+        slider_input.setAttribute('type', 'range')
+        slider_input.setAttribute('min', min_value)
+        slider_input.setAttribute('max', max_value)
+        slider_input.setAttribute('value', ((min_value + max_value) / 2).toString())
+        slider_input.setAttribute('class', 'slider')
+        slider_input.setAttribute('id', 'B_slider' + i.toString())
+
+        div_slider.appendChild(slider_input)
+        div.appendChild(div_slider)
+
+        let div_max = document.createElement('div')
+        div_max.setAttribute('style', "float:right; width:30px")
+        div_max.innerHTML = max_value
+        div.appendChild(div_max)
+
+        return div
+    }
+
     function makeSectionB() {
-        svgB.append('rect').attr('width', BWidth).attr('height', ABHeight)
-	.style('fill', 'none').style('stroke', 'blue');
+        // 여기다 대충 코드 작성
+        let B = document.getElementById('B');
+        B.style.border = "thin solid blue";
+
+        let B_slider = document.getElementById('B_slider');
+        // let B_image = document.getElementById('B_image');
+
+        let dimension_minmax = fetch(url, {
+            method: 'POST',
+            body: JSON.stringify({opcode: 'min_max', content: []})
+        }).then(
+            function (response) {
+                if (!response.ok) {
+                    console.log("Response Error: opcode='min_max'");
+                    return;
+                }
+                return response.json();
+            }
+        )
+
+        // {'min': [], 'max': []};
+        dimension_minmax.then((data) => {
+            dimension_range = data.content;
+        })
+        console.log(dimension_minmax)
+
+        // backend 되면 삭제할 것
+        dimension_range = {
+            'min': [1, 3, 5, 10, 20, 30],
+            'max': [20, 40, 50, 77, 88, 99]
+        }
+
+
+        for (let i = 0; i < num_latent; i++) {
+            let obj = makeDimension(i, dimension_range.min[i], dimension_range.max[i])
+            B_slider.appendChild(obj)
+
+        }
+
+
+        // 이미지 5x5 만들기
+
+        // 테두리는 삭제해도 됨(경계 구분 위함)
+
+        let B_image = d3.select('#B_image').append('svg').attr('width', 400).attr('height', 400);
+
+        console.log(B_image)
+
+
+        console.log(target_idx, target_idx[0], dimension_range.min, dimension_range.min[target_idx[0]])
+        /*        let xl = d3.scaleLinear()
+                    .domain([dimension_range.min[selected_latent[0]], dimension_range.max[selected_latent[0]]])
+                    .range(0,400)
+                let yl = d3.scaleLinear()
+                    .domain([dimension_range.min[selected_latent[1]], dimension_range.max[selected_latent[1]]])
+                    .range(0,400)
+
+                B_image.append('g')
+                    .attr('transform', 'translate(0, 380)')
+                    .call(d3.axisBottom(xl));
+                B_image.append('g')
+                    // .attr('id', 'image-chart-yAxis')
+                    .call(d3.axisLeft(yl))*/
+
+        let image_area = B_image.append('g')
+            .attr('transform', 'translate(20, 20)');
+
+        image_area.append('rect')
+            .attr('width', 360).attr('height', 360)
+            .style('fill', 'none').style('stroke', 'red');
+
+        for (let i = 0; i < 5; i++) {
+            let i_row_image = image_area.append('g')
+                .attr('transform', 'translate(0, ' + (360 / 5 * i).toString() + ')');
+
+            i_row_image.append('rect')
+                .attr('width', 360).attr('height', 360 / 5)
+                .attr('class', 'row' + i.toString())
+                .style('fill', 'none').style('stroke', 'yellow');
+
+            for (let j = 0; j < 5; j++) {
+                let j_column_image = i_row_image.append('g')
+                    .attr('transform', 'translate(' + (360 / 5 * j).toString() + ', 0)');
+
+                j_column_image.append('rect')
+                    .attr('width', 360 / 5 - 4).attr('height', 360 / 5 - 4)
+                    .attr('transform', 'translate(2,2)')
+                    .attr('class', 'column' + j.toString())
+                    .style('fill', 'none').style('stroke', 'green');
+            }
+        }
+
+
+        d3.select("button").on("click", function () {
+            latent_values = [];
+            let sliders = d3.selectAll("input.slider");
+            sliders.each(function () {
+                // console.log(this.value)
+                latent_values.push(this.value)
+            })
+            console.log('latent_values:', latent_values)
+
+            target_idx = [];
+            let target_checkboxes = d3.selectAll("input.checkbox:checked");
+            target_checkboxes.each(function () {
+                // console.log(this.value)
+                target_idx.push(this.value)
+            })
+            console.log('target_idx:', target_idx)
+            console.log('target_idx.length:', target_idx.length)
+
+            if (target_idx.length !== 2) {
+                console.log('Select only 2 target dimensions.')
+            } else {
+                // Backend에서 data 받아오기
+                let tsne = fetch(url, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        opcode: 'latent_imgs',
+                        content: [
+                            {
+                                'latent': latent_values,
+                                'target_idx': target_idx
+                            }
+                        ]
+                    })
+                }).then(
+                    function (response) {
+                        if (!response.ok) {
+                            console.log("Response Error: opcode='latent_imgs'");
+                            return;
+                        }
+                        return response.json();
+                    }
+                )
+
+                tsne.then((data) => {
+                    data = data.content;
+                    let img = data.img;
+                    for(let i=0;i<5;i++){
+                        for(let j=0;j<5;j++){
+                            d3.select('rect.row' + i.toString()+'.column'+j.toString())
+                                .append('svg:image').attr('xlink:href', 'data:image/jpg;base64,' + img[i][j])
+                                .attr('width', '100%').attr('height', '100%');
+                        }
+                    }
+                })
+            }
+        });
     }
 
     function makeSectionC() {
