@@ -64,43 +64,81 @@
 </div>
 </body>
 <script src="https://d3js.org/d3.v6.min.js"></script>
+<script src="config.js"></script>
 
 <script>
-    const host = '147.46.215.63';
-    const port = '37373';
-    const url = "http://" + host + ":" + port;
+    const url= "http://"+host+":"+port;
+    const margin = {left : 50, right : 50, top: 20, bottom: 20, internal : 20};
+    const AWidth = 500;
+    const BWidth = 780;
+    const ABHeight =400;
+    const CWidth = 1300;
+    const CHeight = 400;
     const num_latent = 6;
 
     let dimension_range = {'min': [], 'max': []};
     let target_idx = []; //[0, 1];
     let latent_values = []; //[10, 28, 57, 42, 55, 66];
-
-    d = fetch(url, {
-        method: "POST",
-        body: JSON.stringify({opcode: 'img', content: 'asdfasdf'})
-    }).then(
-        function (response) {
-            if (!response.ok) {
-                console.log("Error");
-                return;
-            }
-            return response.json();
-        }
-    );
-    d.then((s) => {
-        var image = new Image();
-        image.src = 'data:image/jpg;base64,' + s.img;
-        document.body.appendChild(image);
-    });
+  
+    let svg = d3.select('body').append('svg')
+	.attr('width', Math.max(CWidth, AWidth + BWidth + margin.internal) + margin.left + margin.right)
+	.attr('height', ABHeight + CHeight + margin.top + margin.bottom + margin.internal);
+    let svgA = svg.append('g').attr('width', AWidth).attr('height', ABHeight)
+	.attr('transform', `translate(${margin.left}, ${margin.top})`);
+    let svgB = svg.append('g').attr('width', BWidth).attr('height', ABHeight)
+	.attr('transform', `translate(${margin.left + AWidth + margin.internal}, ${margin.top})`);
+    let svgC = svg.append('g').attr('width', CWidth).attr('height', CHeight)
+	.attr('transform', `translate(${margin.left}, ${margin.top + ABHeight + margin.internal})`);
 
     makeSectionA();
     makeSectionB();
     makeSectionC();
 
     function makeSectionA() {
-        // 여기다 대충 코드 작성
-        let section = document.getElementById('A');
-        section.style.border = "thin solid red";
+        svgA.append('rect').attr('width', AWidth).attr('height', ABHeight)
+	.style('fill', 'none').style('stroke', 'red');
+        
+        
+        tsne = fetch(url, {
+        	method: "POST",
+          body: JSON.stringify({opcode:'tsne', content:[]})
+        }).then(
+        	function(response){
+          	if(!response.ok){
+            	console.log("Error");
+              return;
+            }
+            return response.json();
+          }
+        );
+        tsne.then((data) => {
+	data = data.content;
+            circles = svgA.selectAll('circle').data(data).enter().append('circle');
+    let xRange = d3.max(data,d => d.tsne_pos[0]) - d3.min(data, d=> d.tsne_pos[0]);
+    let yRange = d3.max(data,d => d.tsne_pos[1]) - d3.min(data, d=> d.tsne_pos[1]);
+	let xScale = d3.scaleLinear()
+		.domain([d3.min(data, d => d.tsne_pos[0])-xRange*0.1, d3.max(data, d => d.tsne_pos[0])+xRange*0.1])
+		.range([5, AWidth-5]);
+	let yScale = d3.scaleLinear()
+		.domain([d3.min(data, d => d.tsne_pos[1])-yRange*0.1, d3.max(data, d => d.tsne_pos[1])+yRange*0.1])
+		.range([ABHeight-5, 5]);
+	circles.style('fill', `rgb(0, 0, 0)`)
+	      .attr('r', 5)
+	      .attr('cx', d => xScale(d.tsne_pos[0]))
+	      .attr('cy', d => yScale(d.tsne_pos[1]))
+	      .style('fill', d => d3.schemeCategory10[d.label])
+	      .on('mouseenter', function(event, d){
+	        console.log(d);
+	        d3.select(this).attr('r', 10);
+	        svgA.append('svg:image').attr('xlink:href', 'data:image/jpg;base64,'+d.img)
+		.attr('x', xScale(d.tsne_pos[0])).attr('y', yScale(d.tsne_pos[1]))
+	            .attr('width', 100).attr('height', 100).attr('id', 'img');
+	      })
+	      .on('mouseleave', function(event, d){
+	        d3.select(this).attr('r', 5);
+	        svgA.select('#img').remove();
+                  });
+        });
     }
 
     function makeDimension(i, min_value, max_value) {
@@ -301,13 +339,11 @@
                 })
             }
         });
-
     }
 
     function makeSectionC() {
-        // 여기다 대충 코드 작성
-        let section = document.getElementById('C');
-        section.style.border = "thin solid black";
+        svgC.append('rect').attr('width', CWidth).attr('height', CHeight)
+	.style('fill', 'none').style('stroke', 'green');
     }
 
 </script>
