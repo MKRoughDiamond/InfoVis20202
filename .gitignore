@@ -1,0 +1,5 @@
+/backend/MNIST
+__pycache__
+.idea/
+/.idea/
+config.js

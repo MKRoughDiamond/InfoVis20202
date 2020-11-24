@@ -4,26 +4,43 @@ import argparse
 from PIL import Image
 from io import BytesIO
 import base64
+from DL import *
+import time
 
 
 class DLModelServer(BaseHTTPRequestHandler):
-    def _img_to_base64 (self,img):
+    def _img_to_base64(self,img):
         with BytesIO() as buf:
             img.save(buf, 'jpeg')
             imgbyte = buf.getvalue()
         return base64.b64encode(imgbyte).decode()
 
 
-    def _set_headers(self,type_):
+    def _set_headers_failed(self):
+        self.send_response(400)
+        self.send_header('Content-type', 'text/html')
+        self.send_header('Access-Control-Allow-Origin','*')
+        self.end_headers()
+        self.wfile.write(bytes(json.dumps({}),'utf-8'))
+
+
+    def _set_headers_not_found(self):
+        self.send_response(404)
+        self.send_header('Content-type', 'text/html')
+        self.send_header('Access-Control-Allow-Origin','*')
+        self.end_headers()
+        self.wfile.write(bytes(json.dumps({}),'utf-8'))
+
+
+    def _set_headers_success(self):
         self.send_response(200,"ok")
-        self.send_header('Content-type', type_)
+        self.send_header('Content-type', 'application/json')
         self.send_header('Access-Control-Allow-Origin','*')
         self.end_headers()
 
 
     def do_GET(self):
-        self._set_headers('application/json')
-        self.wfile.write(bytes(json.dumps({}),'utf-8'))
+        pass
 
 
     def do_OPTIONS(self):
@@ -31,20 +48,53 @@ class DLModelServer(BaseHTTPRequestHandler):
 
 
     def do_POST(self):
-        self._set_headers('application/json')
         content_len = int(self.headers.get('content-length'))
         contents = self.rfile.read(content_len).decode('utf-8')
         try:
             dic = json.loads(contents)
-            if dic['opcode'] == 'print':
-                self.wfile.write(bytes(json.dumps(dic['content']),'utf-8'))
-            elif dic['opcode'] == 'img':
-                im=Image.open("cat.jpg")
-                res_contents = {'type':'process1','img':self._img_to_base64(im)}
-                self.wfile.write(bytes(json.dumps(res_contents),'utf-8'))
+            res_contents = []
+            if dic['opcode'] == 'tsne':
+                imgs, latents, tsnes, ys = ptmodule.tsne_visualization(100)
+                for i in range(len(imgs)):
+                    img = Image.fromarray(imgs[i]*255).convert('RGB')
+                    res_contents.append({
+                        'latent': latents[i].tolist(),
+                        'img': self._img_to_base64(img),
+                        'tsne_pos': tsnes[i].tolist(),
+                        'label': int(ys[i])
+                    })
+            elif dic['opcode'] == 'latent_imgs': # TSNE visualization first, O.W. returns 404
+                imgs, latents = ptmodule.latent_imgs_gen(dic['content'][0]['latent'],dic['content'][0]['target_idx'])
+                if imgs is None or latents is None:
+                    self._set_headers_failed()
+                    return
+                for i in range(len(imgs)):
+                    img = Image.fromarray(imgs[i]*255).convert('RGB')
+                    res_contents.append({
+                        'latent': latents[i].tolist(),
+                        'img': self._img_to_base64(img)
+                    })
+            elif dic['opcode'] == 'min_max': # TSNE visualization first, O.W. returns 404
+                mins, maxs = ptmodule.get_min_max()
+                if mins is None or maxs is None:
+                    self._set_headers_failed()
+                    return
+                else:
+                    res_contents.append({
+                        'min': mins,
+                        'max': maxs
+                    })
             else:
-                self.wfile.write(bytes(str(['print','img'])+'\n','utf-8'))
+                self._set_headers_not_found()
+                return
+            self._set_headers_success()
+            response = {
+                'opcode': dic['opcode'],
+                'content': res_contents
+            }
+            self.wfile.write(bytes(json.dumps(response),'utf-8'))
         except Exception as err:
+            self._set_headers_failed()
             print(err)
             return
 
@@ -54,6 +104,9 @@ if __name__ == "__main__":
     parser.add_argument("-host", type=str, default='147.46.215.63')
     parser.add_argument("-port", type=int, default=37373)
     args = parser.parse_args()
+
+    ptmodule = PyTorchModule('MNIST')
+
     webServer = HTTPServer((args.host,args.port), DLModelServer)
     print("host: {}\t port: {}".format(args.host,args.port))
 
