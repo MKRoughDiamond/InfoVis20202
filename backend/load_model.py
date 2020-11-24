@@ -52,5 +52,5 @@ if __name__ == "__main__":
     import pdb
     pdb.set_trace()
     model = get_model()
-    dataset = get_dataset()
+    dataset = get_dataset("betaB")
     print('end')
