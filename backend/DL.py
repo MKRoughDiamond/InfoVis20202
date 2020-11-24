@@ -10,9 +10,11 @@ class PyTorchModule:
     def __init__(self,dataset_name,modelname=None,preload=True,tile_shape=(5,5)):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.set_model(modelname)
+        if modelname is None:
+            self.modelname = "betaB"
 
         if dataset_name =='MNIST':
-            self.dataset = get_dataset()
+            self.dataset = get_dataset(self.modelname)
             self.loader = DataLoader(self.dataset,batch_size=100,shuffle=True)
         else:
             raise NotImplementedError
