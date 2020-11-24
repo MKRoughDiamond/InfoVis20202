@@ -1,4 +1,8 @@
-﻿<html>
+<html>
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
 <head>
     <style type="text/css">
         .styleB {
@@ -43,25 +47,42 @@
             background: #4CAF50; /* Green background */
             cursor: pointer; /* Cursor on hover */
         }
+        html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif; font-weight: bold}
     </style>
 </head>
 <body>
-<h1>High-Dimensional Latent Space Visualization</h1>
-<h2>InfoVis 2020 Term Project - Group E</h2>
+<h1 class="w3-text-teal">High-Dimensional Latent Space Visualization</h1>
+<h2 class="w3-text-teal">InfoVis 2020 Term Project - Group E</h2>
 
-
-<div style="width: 1300px; height: 400px">
-    <div id="A" style="float: left; width: 500px; height: 400px"></div>
-    <div id="B" style="float: right; width: 790px; height: 400px">
-        <div id="B_slider" style="float: left; width:380px; height:400px" class="styleB">
-            <button id="update">update</button>
+<div style="padding-left:20px">
+    <div style="width: 1300px; height: 20px">
+        <div style="float: left; width: 500px; height: 15px">
+            <b>(A) Overall Visualization(t-SNE)</b>
         </div>
-        <div id="B_image" style="float: right; width:400px; height:400px" class="styleB"></div>
+        <div style="float: right; width: 800px; height: 15px">
+            <b style="float: right">(B) Latent Space Traversal (2 dimension)</b>
+        </div>
+    </div>
+    <div style="width: 1300px; height: 400px">
+        <div class="w3-border" id="A" style="float: left; width: 500px; height: 400px"></div>
+        <div class="w3-border" id="B" style="float: right; width: 795px; height: 400px">
+            <div class="w3-border" id="B_slider" style="float: left; width:380px; height:400px">
+                <button id="update">update</button>
+            </div>
+            <div class="w3-border" id="B_image" style="float: right; width:400px; height:400px"></div>
+        </div>
+    </div>
+    <div style="width: 1300px; height: 400px">
+        <div class="w3-border" id="C" style="float: left; width: 1300px; height: 400px"></div>
+    </div>
+    <div>
+        <div style="float: left; width: 1300px; height: 15px">
+            <b style="float: right">(C) User input(Drawing)</b>
+        </div>
     </div>
 </div>
-<div style="width: 1300px; height: 400px">
-    <div id="C" style="float: left; width: 1300px; height: 400px"></div>
-</div>
+
+
 </body>
 <script src="https://d3js.org/d3.v6.min.js"></script>
 <script src="config.js"></script>
@@ -91,8 +112,7 @@
     makeSectionC();
 
     function makeSectionA() {
-      svgA.append('rect').attr('width', AWidth).attr('height', ABHeight)
-        .style('fill', 'none').style('stroke', 'red');
+        svgA.append('rect').attr('width', AWidth).attr('height', ABHeight).style('fill', 'none');
         
       tsne = fetch(url, {
         method: "POST",
@@ -203,7 +223,7 @@
     function makeSectionB() {
         // 여기다 대충 코드 작성
         let B = document.getElementById('B');
-        B.style.border = "thin solid blue";
+        // B.style.border = "thin solid blue";
 
         let B_slider = document.getElementById('B_slider');
         // let B_image = document.getElementById('B_image');
@@ -352,8 +372,7 @@
     }
 
     function makeSectionC() {
-        svgC.append('rect').attr('width', CWidth).attr('height', CHeight)
-	.style('fill', 'none').style('stroke', 'green');
+        svgC.append('rect').attr('width', CWidth).attr('height', CHeight).style('fill', 'none');
     }
 
 </script>
