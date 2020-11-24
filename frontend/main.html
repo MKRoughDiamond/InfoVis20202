@@ -139,6 +139,15 @@
           .on('mouseleave', function(event, d){
 	d3.select(this).attr('r', 5);
 	svgA.select('#img').remove();
+          })
+          .on('click', function(event, d){
+            let sliders = d3.selectAll("input.slider");
+            sliders.each(function(d_, i) {
+                // console.log(this.value)
+                console.log(this.value);
+                console.log(d.latent[i]);
+                this.value = d.latent[i];
+            })
           });
       });
     }
@@ -220,8 +229,8 @@
 
         // backend 되면 삭제할 것
         dimension_range = {
-            'min': [1, 3, 5, 10, 20, 30],
-            'max': [20, 40, 50, 77, 88, 99]
+            'min': [-10, -10, -10, -10, -10, -10],
+            'max': [10, 10, 10, 10, 10, 10]
         }
 
 
@@ -283,7 +292,6 @@
                     .style('fill', 'none').style('stroke', 'green');
             }
         }
-
 
         d3.select("button").on("click", function () {
             latent_values = [];
