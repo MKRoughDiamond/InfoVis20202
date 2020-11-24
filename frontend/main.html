@@ -80,15 +80,9 @@
     let target_idx = []; //[0, 1];
     let latent_values = []; //[10, 28, 57, 42, 55, 66];
   
-    let svg = d3.select('body').append('svg')
-	.attr('width', Math.max(CWidth, AWidth + BWidth + margin.internal) + margin.left + margin.right)
-	.attr('height', ABHeight + CHeight + margin.top + margin.bottom + margin.internal);
-    let svgA = svg.append('g').attr('width', AWidth).attr('height', ABHeight)
-	.attr('transform', `translate(${margin.left}, ${margin.top})`);
-    let svgB = svg.append('g').attr('width', BWidth).attr('height', ABHeight)
-	.attr('transform', `translate(${margin.left + AWidth + margin.internal}, ${margin.top})`);
-    let svgC = svg.append('g').attr('width', CWidth).attr('height', CHeight)
-	.attr('transform', `translate(${margin.left}, ${margin.top + ABHeight + margin.internal})`);
+    let svgA = d3.select('#A').append('svg').attr('width', AWidth).attr('height', ABHeight);
+    let svgB = d3.select('#B').append('svg').attr('width', BWidth).attr('height', ABHeight);
+    let svgC = d3.select('#C').append('svg').attr('width', CWidth).attr('height', CHeight);
 
     makeSectionA();
     makeSectionB();
@@ -113,7 +107,8 @@
         );
         tsne.then((data) => {
 	data = data.content;
-            circles = svgA.selectAll('circle').data(data).enter().append('circle');
+    console.log(data);
+    circles = svgA.selectAll('circle').data(data).enter().append('circle');
     let xRange = d3.max(data,d => d.tsne_pos[0]) - d3.min(data, d=> d.tsne_pos[0]);
     let yRange = d3.max(data,d => d.tsne_pos[1]) - d3.min(data, d=> d.tsne_pos[1]);
 	let xScale = d3.scaleLinear()
