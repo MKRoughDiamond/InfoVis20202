@@ -146,11 +146,11 @@
 
     function make_slider_row(i, min_value, max_value) {
         i = i.toString();
-        console.log(min_value,max_value)
+        // console.log(min_value,max_value)
         let mid_value = ((min_value + max_value) / 2).toFixed(3).toString()
         min_value = min_value.toFixed(3).toString();
         max_value = max_value.toFixed(3).toString();
-        console.log(min_value, mid_value,max_value)
+        // console.log(min_value, mid_value,max_value)
         let slider_row = document.createElement('div')
         slider_row.setAttribute('style', 'height: ' + (360 / num_latent).toString())
 
@@ -195,9 +195,9 @@
 
         let div_text = document.createElement('div')
         div_text.setAttribute('style', "float:left; width:40px")
-        let h4 = document.createElement('h6')
-        h4.innerHTML = mid_value
-        div_text.appendChild(h4)
+        let p = document.createElement('p')
+        p.innerHTML = mid_value
+        div_text.appendChild(p)
         slider_row.appendChild(div_text)
 
 
@@ -233,7 +233,7 @@
         slider.onchange = function(){
             let value = slider.value;
             console.log(value);
-            h4.innerHTML = value;
+            p.innerHTML = value;
         }
 
 /*
@@ -390,11 +390,13 @@
                             console.log("Response Error: opcode='latent_imgs'");
                             return;
                         }
+                        console.log('latent_imgs retrieved')
                         return response.json();
                     }
                 )
 
                 tsne.then((data) => {
+                    console.log('data retrieve')
                     data = data.content;
                     let img = data.img;
                     for(let i=0;i<5;i++){
