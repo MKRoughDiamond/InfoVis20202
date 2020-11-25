@@ -6,7 +6,10 @@
 <head>
     <link rel="stylesheet" href="style.css"/>
     <style type="text/css">
-        html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif; font-weight: bold}
+        html, body, h1, h2, h3, h4, h5, h6 {
+            font-family: "Roboto", sans-serif;
+            font-weight: bold
+        }
     </style>
 </head>
 <body>
@@ -25,22 +28,10 @@
     <div style="width: 1300px; height: 400px">
         <div class="w3-border" id="A" style="float: left; width: 500px; height: 400px"></div>
         <div class="w3-border" id="B" style="float: right; width: 795px; height: 400px">
-            <div class="w3-border" id="B_slider" style="text-align: center; float: left; width:390px; height:400px">
-                <button id="update">update</button>
-<!--                <div id="slider_container">
-                    <div class="slider_row" style="height: 30px">
-                        <div style="float:left; width:30px">
-                            <input type="checkbox" style="width:20px; height:20px;"/>
-                        </div>
-                        <div style="float:left; width:50px">start</div>
-                        <div style="float:left; width:250px">
-                            <input type="range" class="slider" min="0" max="11" value="7" step="0.001"/>
-                        </div>
-                        <div style="float:left; width:50px">end</div>
-                    </div>
-                </div>-->
-            </div>
-            <div class="w3-border" id="B_image" style="float: right; width:400px; height:400px"></div>
+            <div class="w3-border" id="B_slider"
+                 style="text-align: center; float: left; width:390px; height:400px; padding:8px 5px"></div>
+            <div class="w3-border" id="B_image"
+                 style="float: right; width:400px; height:400px"></div>
         </div>
     </div>
     <div style="width: 1300px; height: 400px">
@@ -59,22 +50,29 @@
 <script src="config.js"></script>
 
 <script>
-    const url= "http://"+host+":"+port;
-    const margin = {left : 50, right : 50, top: 20, bottom: 20, internal : 20};
+    function translate(x, y) {
+        return 'translate(' + x + ', ' + y + ')';
+    }
+</script>
+
+<script>
+    const url = "http://" + host + ":" + port;
+    const margin = {left: 50, right: 50, top: 20, bottom: 20, internal: 20};
     const AWidth = 500;
     const BWidth = 780;
     const AImageWidth = 100;
     const AImageHeight = 100;
-    const ABHeight =400;
+    const ABHeight = 400;
     const CWidth = 1300;
     const CHeight = 400;
     const num_latent = 10;
+    const num_row_B_image = 5; // 5x5=25개의 이미지가 표시됨
 
     let dimension_range = {'min': [], 'max': []};
-    let target_idx = [];
-    let latent_values = [];
+    let target_idx = [0, 1];
+    let latent_values = new Array(num_latent).fill(0);
     let num_checked = 2;
-  
+
     let svgA = d3.select('#A').append('svg').attr('width', AWidth).attr('height', ABHeight);
     let svgB = d3.select('#B').append('svg').attr('width', BWidth).attr('height', ABHeight);
     let svgC = d3.select('#C').append('svg').attr('width', CWidth).attr('height', CHeight);
@@ -85,74 +83,74 @@
 
     function makeSectionA() {
         svgA.append('rect').attr('width', AWidth).attr('height', ABHeight).style('fill', 'none');
-        
-      tsne = fetch(url, {
-        method: "POST",
-        body: JSON.stringify({opcode:'tsne', content:[]})
-      }).then(
-        function(response){
-          if(!response.ok){
-            console.log("Error");
-            return;
-          }
-          return response.json();
-        }
-      );
-      tsne.then((data) => {
-        data = data.content;
-        console.log('data:', data);
-        circles = svgA.selectAll('circle').data(data).enter().append('circle');
-        let xRange = d3.max(data,d => d.tsne_pos[0]) - d3.min(data, d=> d.tsne_pos[0]);
-        let yRange = d3.max(data,d => d.tsne_pos[1]) - d3.min(data, d=> d.tsne_pos[1]);
-        let xScale = d3.scaleLinear()
-          .domain([d3.min(data, d => d.tsne_pos[0])-xRange*0.1, d3.max(data, d => d.tsne_pos[0])+xRange*0.1])
-          .range([5, AWidth-5]);
-        let yScale = d3.scaleLinear()
-          .domain([d3.min(data, d => d.tsne_pos[1])-yRange*0.1, d3.max(data, d => d.tsne_pos[1])+yRange*0.1])
-          .range([ABHeight-5, 5]);
-        circles.style('fill', `rgb(0, 0, 0)`).attr('r', 5)
-          .attr('cx', d => xScale(d.tsne_pos[0]))
-          .attr('cy', d => yScale(d.tsne_pos[1]))
-          .style('fill', d => d3.schemeCategory10[d.label])
-          .on('mouseenter', function(event, d){
-	console.log(d);
-	d3.select(this).attr('r', 10);
-            x = xScale(d.tsne_pos[0]);
-            y = yScale(d.tsne_pos[1]);
-            if(x + AImageWidth > AWidth)
-              x -= AImageWidth;
-            if(y + AImageHeight > ABHeight)
-              y -= AImageHeight;
 
-	svgA.append('svg:image').attr('xlink:href', 'data:image/jpg;base64,'+d.img)
-              .attr('x', x).attr('y', y)
-	  .attr('width', AImageWidth).attr('height', AImageHeight).attr('id', 'img');
-          })
-          .on('mouseleave', function(event, d){
-	d3.select(this).attr('r', 5);
-	svgA.select('#img').remove();
-          })
-          .on('click', function(event, d){
-            let sliders = d3.selectAll("input.slider");
-            sliders.each(function(d_, i) {
-                // console.log(this.value)
-                console.log(this.value);
-                console.log(d.latent[i]);
-                this.value = d.latent[i];
-            })
-          });
-      });
+        tsne = fetch(url, {
+            method: "POST",
+            body: JSON.stringify({opcode: 'tsne', content: []})
+        }).then(
+            function (response) {
+                if (!response.ok) {
+                    console.log("Error");
+                    return;
+                }
+                return response.json();
+            }
+        );
+        tsne.then((data) => {
+            data = data.content;
+            console.log('data:', data);
+            circles = svgA.selectAll('circle').data(data).enter().append('circle');
+            let xRange = d3.max(data, d => d.tsne_pos[0]) - d3.min(data, d => d.tsne_pos[0]);
+            let yRange = d3.max(data, d => d.tsne_pos[1]) - d3.min(data, d => d.tsne_pos[1]);
+            let xScale = d3.scaleLinear()
+                .domain([d3.min(data, d => d.tsne_pos[0]) - xRange * 0.1, d3.max(data, d => d.tsne_pos[0]) + xRange * 0.1])
+                .range([5, AWidth - 5]);
+            let yScale = d3.scaleLinear()
+                .domain([d3.min(data, d => d.tsne_pos[1]) - yRange * 0.1, d3.max(data, d => d.tsne_pos[1]) + yRange * 0.1])
+                .range([ABHeight - 5, 5]);
+            circles.style('fill', `rgb(0, 0, 0)`).attr('r', 5)
+                .attr('cx', d => xScale(d.tsne_pos[0]))
+                .attr('cy', d => yScale(d.tsne_pos[1]))
+                .style('fill', d => d3.schemeCategory10[d.label])
+                .on('mouseenter', function (event, d) {
+                    console.log(d);
+                    d3.select(this).attr('r', 10);
+                    x = xScale(d.tsne_pos[0]);
+                    y = yScale(d.tsne_pos[1]);
+                    if (x + AImageWidth > AWidth)
+                        x -= AImageWidth;
+                    if (y + AImageHeight > ABHeight)
+                        y -= AImageHeight;
+
+                    svgA.append('svg:image').attr('xlink:href', 'data:image/jpg;base64,' + d.img)
+                        .attr('x', x).attr('y', y)
+                        .attr('width', AImageWidth).attr('height', AImageHeight).attr('id', 'img');
+                })
+                .on('mouseleave', function (event, d) {
+                    d3.select(this).attr('r', 5);
+                    svgA.select('#img').remove();
+                })
+                .on('click', function (event, d) {
+                    let sliders = d3.selectAll("input.slider");
+                    sliders.each(function (d_, i) {
+                        // console.log(this.value)
+                        console.log(this.value);
+                        console.log(d.latent[i]);
+                        this.value = d.latent[i];
+                    })
+                });
+        });
     }
 
     function make_slider_row(i, min_value, max_value) {
         i = i.toString();
         // console.log(min_value,max_value)
-        let mid_value = ((min_value + max_value) / 2).toFixed(3).toString()
+        let set_value = (min_value + (max_value - min_value) * Math.random()).toFixed(3).toString();
         min_value = min_value.toFixed(3).toString();
         max_value = max_value.toFixed(3).toString();
         // console.log(min_value, mid_value,max_value)
         let slider_row = document.createElement('div')
-        slider_row.setAttribute('style', 'height: ' + (360 / num_latent).toString())
+        slider_row.setAttribute('style', 'height: ' + (400 / num_latent).toString())
 
         let div_checkbox = document.createElement('div')
         div_checkbox.setAttribute('style', "float:left; width:30px")
@@ -179,7 +177,6 @@
         slider.setAttribute('type', 'range')
         slider.setAttribute('min', min_value)
         slider.setAttribute('max', max_value)
-        // slider.setAttribute('value', mid_value)
         slider.setAttribute('step', '0.001')
         slider.setAttribute('class', 'slider')
         slider.setAttribute('id', 'B_slider' + i.toString())
@@ -196,7 +193,7 @@
         let div_text = document.createElement('div')
         div_text.setAttribute('style', "float:left; width:40px")
         let p = document.createElement('p')
-        p.innerHTML = mid_value
+        p.innerHTML = set_value
         div_text.appendChild(p)
         slider_row.appendChild(div_text)
 
@@ -204,54 +201,111 @@
         if (i < 2) {
             checkbox.setAttribute('checked', '')
             slider.disabled = true;
-        }else{
+        } else {
             checkbox.disabled = true;
         }
 
+        // checkbox 체크/체크 해제 시
         checkbox.addEventListener('change', (event) => {
-            let checkboxes = document.getElementsByClassName('checkbox')
+            let checkboxes = d3.selectAll('input.checkbox');
             if (event.target.checked) {
                 num_checked += 1;
-                if(num_checked >= 2){
-                    for(let i=0;i<checkboxes.length;i++){
-                        if(checkboxes[i].checked === false){
-                            checkboxes[i].disabled = true
+                if (num_checked >= 2) {
+                    // checkbox 비활성화
+                    checkboxes.each(function(){
+                        if(this.checked === false){
+                            this.disabled = true;
                         }
-                    }
+                    })
+                    // image 영역 업데이트
+                    update_B_image();
                 }
                 slider.disabled = true;
             } else {
                 num_checked -= 1;
-                for(let i=0;i<checkboxes.length;i++){
-                    checkboxes[i].disabled = false
-                }
+                checkboxes.each(function(){
+                    this.disabled = false;
+                })
                 slider.disabled = false;
             }
         })
 
-
-        slider.onchange = function(){
-            let value = slider.value;
-            console.log(value);
-            p.innerHTML = value;
+        // slider 이동 시
+        slider.oninput = function () {
+            p.innerHTML = slider.value;
         }
 
-/*
-                rangePercent = $('[type="range"]').val();
-                $('h4').html(rangePercent+'<span></span>');
-                $('[type="range"], h4>span').css('filter', 'hue-rotate(-' + rangePercent + 'deg)');
-                $('h4').css({'transform': 'translateX(-50%) scale(' + (1+(rangePercent/100)) + ')', 'left': rangePercent+'%'});
-            });
-        });
-*/
+        // slider 이동이 끝날 시
+        slider.onchange = function () {
+            latent_values[i] = slider.value;
+            if(num_checked === 2){
+                // image 영역 업데이트
+                update_B_image();
+            }
+        }
+
+        slider.setAttribute('value', set_value)
+        latent_values[i] = slider.value;
 
         return slider_row
     }
 
+    function update_B_image() {
+
+        console.log('latent_values:', latent_values)
+
+        target_idx = [];
+        let target_checkboxes = d3.selectAll("input.checkbox:checked");
+        target_checkboxes.each(function () {
+            target_idx.push(this.value);
+        })
+        console.log('target_idx:', target_idx)
+        d3.select('#B_yAxis').text(target_idx[0]);
+        d3.select('#B_xAxis').text(target_idx[1]);
+
+        if (target_idx.length !== 2) {
+            console.log('Select only 2 target dimensions.')
+        } else {
+            // Backend에서 data 받아오기
+            let tsne = fetch(url, {
+                method: 'POST',
+                body: JSON.stringify({
+                    opcode: 'latent_imgs',
+                    content: [
+                        {
+                            'latent': latent_values,
+                            'target_idx': target_idx
+                        }
+                    ]
+                })
+            }).then(
+                function (response) {
+                    if (!response.ok) {
+                        console.log("Response Error: opcode='latent_imgs'");
+                        return;
+                    }
+                    console.log('latent_imgs retrieved')
+                    return response.json();
+                }
+            )
+
+            tsne.then((data) => {
+                console.log('data retrieve')
+                data = data.content;
+                let img = data.img;
+                for (let i = 0; i < num_row_B_image; i++) {
+                    for (let j = 0; j < num_row_B_image; j++) {
+                        d3.select('rect.row' + i.toString() + '.column' + j.toString())
+                            .append('svg:image').attr('xlink:href', 'data:image/jpg;base64,' + img[i][j])
+                            .attr('width', '100%').attr('height', '100%');
+                    }
+                }
+            })
+        }
+    }
+
     function makeSectionB() {
-        // 여기다 대충 코드 작성
         let B = document.getElementById('B');
-        // B.style.border = "thin solid blue";
 
         let B_slider = document.getElementById('B_slider');
         // let B_image = document.getElementById('B_image');
@@ -265,150 +319,64 @@
                     console.log("Response Error: opcode='min_max'");
                     return;
                 }
-                // console.log('min_max response:', response.json())
                 return response.json();
             }
         )
 
-/*
-        let slider_container = d3.select('#slider_container');
-        let slider_row_1st = d3.select('.slider_row');
-        console.log('slider_row_1st:', slider_row_1st)
-        for(let i=0;i<2;i++){
-            let slider_row = slider_row_1st.clone(true);
-            slider_container.node().append(slider_row);
-        }
-        let x = d3.selectAll('#text').remove();
-
-*/
-
-
-        // {'min': [], 'max': []};
         dimension_minmax.then((data) => {
             dimension_range = data.content[0];
-            // console.log('dimension_minmax:', dimension_minmax)
             console.log('dimension_range:', dimension_range)
-
 
             for (let i = 0; i < num_latent; i++) {
                 let obj = make_slider_row(i, dimension_range.min[i], dimension_range.max[i])
                 B_slider.appendChild(obj)
-
             }
+            update_B_image()
         })
 
 
-
         // 이미지 5x5 만들기
-
         // 테두리는 삭제해도 됨(경계 구분 위함)
 
         let B_image = d3.select('#B_image').append('svg').attr('width', 400).attr('height', 400);
 
-        console.log(B_image)
+        let image_margin = 20;
 
+        // 2개의 latent variable 축 생성
+        B_image.append('text').attr('id', 'B_yAxis').attr('transform', translate(5, ABHeight / 2 + 6)).text(target_idx[0]);
+        B_image.append('text').attr('id', 'B_xAxis').attr('transform', translate(ABHeight / 2 - 3, ABHeight - 5)).text(target_idx[1]);
 
-        console.log(target_idx, target_idx[0], dimension_range.min, dimension_range.min[target_idx[0]])
-        /*        let xl = d3.scaleLinear()
-                    .domain([dimension_range.min[selected_latent[0]], dimension_range.max[selected_latent[0]]])
-                    .range(0,400)
-                let yl = d3.scaleLinear()
-                    .domain([dimension_range.min[selected_latent[1]], dimension_range.max[selected_latent[1]]])
-                    .range(0,400)
-
-                B_image.append('g')
-                    .attr('transform', 'translate(0, 380)')
-                    .call(d3.axisBottom(xl));
-                B_image.append('g')
-                    // .attr('id', 'image-chart-yAxis')
-                    .call(d3.axisLeft(yl))*/
-
+        // 5x5 image 영역 생성
         let image_area = B_image.append('g')
-            .attr('transform', 'translate(20, 20)');
+            .attr('transform', translate(image_margin,image_margin));
+
+        let wh = ABHeight - 2*image_margin;
 
         image_area.append('rect')
-            .attr('width', 360).attr('height', 360)
+            .attr('width', wh).attr('height', wh)
             .style('fill', 'none').style('stroke', 'red');
 
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < num_row_B_image; i++) {
             let i_row_image = image_area.append('g')
-                .attr('transform', 'translate(0, ' + (360 / 5 * i).toString() + ')');
+                .attr('transform', translate(0, (wh / num_row_B_image * i).toString()));
 
             i_row_image.append('rect')
-                .attr('width', 360).attr('height', 360 / 5)
+                .attr('width', wh).attr('height', wh / num_row_B_image)
                 .attr('class', 'row' + i.toString())
                 .style('fill', 'none').style('stroke', 'yellow');
 
-            for (let j = 0; j < 5; j++) {
+            for (let j = 0; j < num_row_B_image; j++) {
                 let j_column_image = i_row_image.append('g')
-                    .attr('transform', 'translate(' + (360 / 5 * j).toString() + ', 0)');
+                    .attr('transform', translate((wh / num_row_B_image * j).toString() , 0));
 
                 j_column_image.append('rect')
-                    .attr('width', 360 / 5 - 4).attr('height', 360 / 5 - 4)
-                    .attr('transform', 'translate(2,2)')
+                    .attr('width', wh / num_row_B_image - 4).attr('height', wh / num_row_B_image - 4)
+                    .attr('transform', translate(2,2))
                     .attr('class', 'column' + j.toString())
                     .style('fill', 'none').style('stroke', 'green');
             }
         }
 
-        d3.select("button").on("click", function () {
-            latent_values = [];
-            let sliders = d3.selectAll("input.slider");
-            sliders.each(function () {
-                // console.log(this.value)
-                latent_values.push(this.value)
-            })
-            console.log('latent_values:', latent_values)
-
-            target_idx = [];
-            let target_checkboxes = d3.selectAll("input.checkbox:checked");
-            target_checkboxes.each(function () {
-                // console.log(this.value)
-                target_idx.push(this.value)
-            })
-            console.log('target_idx:', target_idx)
-            console.log('target_idx.length:', target_idx.length)
-
-            if (target_idx.length !== 2) {
-                console.log('Select only 2 target dimensions.')
-            } else {
-                // Backend에서 data 받아오기
-                let tsne = fetch(url, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        opcode: 'latent_imgs',
-                        content: [
-                            {
-                                'latent': latent_values,
-                                'target_idx': target_idx
-                            }
-                        ]
-                    })
-                }).then(
-                    function (response) {
-                        if (!response.ok) {
-                            console.log("Response Error: opcode='latent_imgs'");
-                            return;
-                        }
-                        console.log('latent_imgs retrieved')
-                        return response.json();
-                    }
-                )
-
-                tsne.then((data) => {
-                    console.log('data retrieve')
-                    data = data.content;
-                    let img = data.img;
-                    for(let i=0;i<5;i++){
-                        for(let j=0;j<5;j++){
-                            d3.select('rect.row' + i.toString()+'.column'+j.toString())
-                                .append('svg:image').attr('xlink:href', 'data:image/jpg;base64,' + img[i][j])
-                                .attr('width', '100%').attr('height', '100%');
-                        }
-                    }
-                })
-            }
-        });
     }
 
     function makeSectionC() {
