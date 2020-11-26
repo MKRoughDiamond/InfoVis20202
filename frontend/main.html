@@ -1,4 +1,4 @@
-<html>
+﻿<html>
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -132,7 +132,10 @@
                     let sliders = d3.selectAll("input.slider");
                     sliders.each(function (d_, i) {
                         this.value = d.latent[i];
+                        this.oninput();
+                        latent_values[i] = d.latent[i];
                     })
+                    update_B_image();
                 });
         });
     }
