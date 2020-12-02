@@ -7,32 +7,66 @@ from load_model import *
 from sklearn.manifold import TSNE
 
 class PyTorchModule:
-    def __init__(self,dataset_name,modelname=None,preload=True,tile_shape=(5,5)):
+    def __init__(self, dataset_name='MNIST', modelname="betaB", tsne_length=100, vis_B_shape=[5,5], vis_C_length=11, delta=0.05):
+        self.param = {}
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.set_model(modelname)
-        if modelname is None:
-            self.modelname = "betaB"
+        self.param['model_name'] = modelname
 
-        if dataset_name =='MNIST':
-            self.dataset = get_dataset(self.modelname)
+        if dataset_name == 'MNIST':
+            self.dataset = get_dataset(self.param['model_name'])
             self.loader = DataLoader(self.dataset,batch_size=100,shuffle=True)
         else:
             raise NotImplementedError
 
-        if preload:
-            self.small_data = self._data_load(100)
-            self.tsne_length = 100
-        else:
-            self.small_data = None
-            self.tsne_length = None
+        self.small_data = self._data_load(tsne_length)
+        x, y = self.small_data
+        recon_img, _, latent = self.model(x)
+        self.mins = torch.min(latent,0)[0]
+        self.maxs = torch.max(latent,0)[0]
 
-        self.mins = None
-        self.maxs = None
+        self.param['tsne_length'] = tsne_length
+        self.param['vis_B_shape'] = vis_B_shape
+        self.param['vis_C_length'] = vis_C_length
+        self._set_tile()
+        self.param['delta'] = delta
+        self.tsne_model = TSNE
 
-        self.tile_shape = tile_shape
+    def get_params(self):
+        res_contents = {
+            'model_name': self.param['model_name'],
+            'tsne_length': self.param['tsne_length'],
+            'vis_B_shape': self.param['vis_B_shape'],
+            'vis_C_length': self.param['vis_C_length'],
+            'delta': self.param['delta']
+        }
+        return res_contents
 
-        self.tile_x = torch.arange(tile_shape[1],dtype=torch.float32).unsqueeze(0).repeat(tile_shape[0],1).to(self.device)/(tile_shape[1]-1)
-        self.tile_y = torch.arange(tile_shape[0],dtype=torch.float32).unsqueeze(0).repeat(tile_shape[1],1).transpose(0,1).to(self.device)/(tile_shape[0]-1)
+    
+    def set_param(self, param_name, value):
+        if param_name is None or param_name not in list(self.param.keys()) or value is None:
+            return False
+        try:
+            if '.' in value:
+                self.param[param_name] = float(value)
+            else:
+                self.param[param_name] = int(value)
+        except Exception:
+            self.param[param_name] = value
+
+        if param_name == 'tsne_length':
+            self.small_data = self._data_load(self.param[param_name])
+        elif param_name == 'vis_B_shape':
+            self._set_tile()
+        elif param_name == 'model_name':
+            self.set_model(self.param[param_name])
+        return True
+
+
+    def _set_tile(self):
+        self.tile_x = torch.arange(self.param['vis_B_shape'][1],dtype=torch.float32).unsqueeze(0).repeat(self.param['vis_B_shape'][0],1).to(self.device)-self.param['vis_B_shape'][1]//2
+        self.tile_y = torch.arange(self.param['vis_B_shape'][1],dtype=torch.float32).unsqueeze(0).repeat(self.param['vis_B_shape'][1],1).transpose(0,1).to(self.device)-self.param['vis_B_shape'][1]//2
+        self.linear_c = torch.arange(self.param['vis_C_length'],dtype=torch.float32).unsqueeze(0).to(self.device)-self.param['vis_C_length']//2
 
 
     def set_model(self,modelname):
@@ -40,15 +74,6 @@ class PyTorchModule:
             self.model = get_model().to(self.device).eval()
         else:
             self.model = get_model(modelname).to(self.device).eval()
-
-
-    def _latent_gen(self,latent,axes):
-        latent = torch.tensor(latent,device=self.device,dtype=torch.float32)
-        dup = latent.unsqueeze(-1).unsqueeze(-1).repeat(1,self.tile_shape[0],self.tile_shape[1])
-        dup[axes[0]]=(1-self.tile_x)*self.mins[axes[0]]+self.tile_x*self.maxs[axes[0]]
-        dup[axes[1]]=(1-self.tile_y)*self.mins[axes[1]]+self.tile_y*self.maxs[axes[1]]
-        dup = dup.view(-1,self.tile_shape[0]*self.tile_shape[1]).transpose(0,1)
-        return dup
 
 
     def _data_load(self,length):
@@ -68,12 +93,39 @@ class PyTorchModule:
         return data_x, data_y
 
 
-    def latent_imgs_gen(self,latent,axes):
+    def _tile_gen(self,latent,axes):
+        latent = torch.tensor(latent,device=self.device,dtype=torch.float32)
+        dup = latent.unsqueeze(-1).unsqueeze(-1).repeat(1,self.param['vis_B_shape'][0],self.param['vis_B_shape'][1])
+        dup[axes[0]]+=self.tile_x*self.param['delta']*(self.maxs[axes[0]]-self.mins[axes[0]])
+        dup[axes[1]]+=self.tile_y*self.param['delta']*(self.maxs[axes[1]]-self.mins[axes[1]])
+        dup = dup.view(-1,self.param['vis_B_shape'][0]*self.param['vis_B_shape'][1]).transpose(0,1)
+        return dup
+
+
+    def tile_imgs_gen(self,latent,axes):
         if self.mins is None or self.maxs is None:
             return None, None
-        dup = self._latent_gen(latent,axes)
+        dup = self._tile_gen(latent,axes)
         recon_img = self.model.decoder(dup)
         return recon_img.squeeze().cpu().detach().numpy(), dup.cpu().detach().numpy()
+
+
+    def _linear_gen(self,latent):
+        latent = torch.tensor(latent,device=self.device,dtype=torch.float32)
+        dup = latent.unsqueeze(-1).unsqueeze(-1).repeat(1,len(latent),self.param['vis_C_length'])
+        for i in range(len(latent)):
+            dup[i]+=self.linear_c*self.param['delta']*(self.maxs[i]-self.mins[i])
+        dup = dup.view(-1,len(latent)*self.param['vis_C_length']).transpose(0,1)
+        return dup
+
+
+    def linear_imgs_gen(self, latent):
+        if self.mins is None or self.maxs is None:
+            return None, None
+        dup = self._linear_gen(latent)
+        recon_img = self.model.decoder(dup)
+        return recon_img.squeeze().cpu().detach().numpy(), dup.cpu().detach().numpy()
+        
 
 
     def get_min_max(self):
@@ -82,16 +134,12 @@ class PyTorchModule:
         return self.mins.cpu().detach().numpy().tolist(), self.maxs.cpu().detach().numpy().tolist()
 
 
-    def tsne_visualization(self,length):
-        if self.small_data is not None or length != self.tsne_length:
-            x, y = self.small_data
-        else:
-            x, y = self._data_load(length)
-            self.tsne_length = length
+    def tsne_visualization(self):
+        x, y = self.small_data
         recon_img, _, latent = self.model(x)
         self.mins = torch.min(latent,0)[0]
         self.maxs = torch.max(latent,0)[0]
         recon_img = recon_img.squeeze().cpu().detach().numpy()
         latent = latent.cpu().detach().numpy()
-        tsne = TSNE(n_components=2).fit_transform(latent)
+        tsne = self.tsne_model(n_components=2).fit_transform(latent)
         return recon_img, latent, tsne, y.cpu().detach().numpy()

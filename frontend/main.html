@@ -77,9 +77,23 @@
     let svgB = d3.select('#B').append('svg').attr('width', BWidth).attr('height', ABHeight);
     let svgC = d3.select('#C').append('svg').attr('width', CWidth).attr('height', CHeight);
 
-    makeSectionA();
-    makeSectionB();
-    makeSectionC();
+    fetch(url, {
+        method: "GET"
+    }).then(
+        function (response) {
+            if (!response.ok) {
+                console.log("Connection Error");
+                return;
+            }
+            return response.json();
+        }
+    ).then((data) => {
+        params = data.content;
+        console.log(params);
+        makeSectionA();
+        makeSectionB();
+        makeSectionC();
+    });
 
     function makeSectionA() {
         svgA.append('rect').attr('width', AWidth).attr('height', ABHeight).style('fill', 'none');
@@ -283,7 +297,7 @@
             )
 
             tsne.then((data) => {
-                data = data.content;
+                data = data.content.tile;
                 for (let i = 0; i < num_row_B_image; i++) {
                     for (let j = 0; j < num_row_B_image; j++) {
                         d3.select('g.row' + i.toString()+'column' + j.toString())

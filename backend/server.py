@@ -40,7 +40,21 @@ class DLModelServer(BaseHTTPRequestHandler):
 
 
     def do_GET(self):
-        pass
+        try:
+            global ptmodule
+            ptmodule = PyTorchModule()
+            res_contents = ptmodule.get_params()
+            print(res_contents)
+        except Exception:
+            self._set_headers_failed()
+            return
+        self._set_headers_success()
+        response = {
+            'token': "",
+            'content': res_contents
+        }
+        self.wfile.write(bytes(json.dumps(response),'utf-8'))
+
 
 
     def do_OPTIONS(self):
@@ -54,7 +68,7 @@ class DLModelServer(BaseHTTPRequestHandler):
             dic = json.loads(contents)
             res_contents = []
             if dic['opcode'] == 'tsne':
-                imgs, latents, tsnes, ys = ptmodule.tsne_visualization(100)
+                imgs, latents, tsnes, ys = ptmodule.tsne_visualization()
                 for i in range(len(imgs)):
                     img = Image.fromarray(imgs[i]*255).convert('RGB')
                     res_contents.append({
@@ -64,6 +78,9 @@ class DLModelServer(BaseHTTPRequestHandler):
                         'label': int(ys[i])
                     })
             elif dic['opcode'] == 'latent_imgs': # TSNE visualization first, O.W. returns 404
+                res_contents = {}
+                res_contents['tile']=[]
+                res_contents['linear']=[]
                 try:
                     for i in range(len(dic['content'][0]['latent'])):
                         dic['content'][0]['latent'][i] = float(dic['content'][0]['latent'][i])
@@ -72,13 +89,23 @@ class DLModelServer(BaseHTTPRequestHandler):
                 except Exception:
                     self._set_headers_failed()
                     return
-                imgs, latents = ptmodule.latent_imgs_gen(dic['content'][0]['latent'],dic['content'][0]['target_idx'])
+                imgs, latents = ptmodule.tile_imgs_gen(dic['content'][0]['latent'],dic['content'][0]['target_idx'])
                 if imgs is None or latents is None:
                     self._set_headers_failed()
                     return
                 for i in range(len(imgs)):
                     img = Image.fromarray(imgs[i]*255).convert('RGB')
-                    res_contents.append({
+                    res_contents['tile'].append({
+                        'latent': latents[i].tolist(),
+                        'img': self._img_to_base64(img)
+                    })
+                imgs, latents = ptmodule.linear_imgs_gen(dic['content'][0]['latent'])
+                if imgs is None or latents is None:
+                    self._set_headers_failed()
+                    return
+                for i in range(len(imgs)):
+                    img = Image.fromarray(imgs[i]*255).convert('RGB')
+                    res_contents['linear'].append({
                         'latent': latents[i].tolist(),
                         'img': self._img_to_base64(img)
                     })
@@ -89,9 +116,16 @@ class DLModelServer(BaseHTTPRequestHandler):
                     return
                 else:
                     res_contents.append({
+                        'n_dim': len(mins),
                         'min': mins,
                         'max': maxs
                     })
+            elif dic['opcode'] == 'set_param':
+                param_name = dic['content'][0]['param_name']
+                value = dic['content'][0]['value']
+                if not ptmodule.set_param(param_name,value):
+                    self._set_headers_failed()
+                    return
             else:
                 self._set_headers_not_found()
                 return
@@ -113,7 +147,7 @@ if __name__ == "__main__":
     parser.add_argument("-port", type=int, default=37373)
     args = parser.parse_args()
 
-    ptmodule = PyTorchModule('MNIST')
+    ptmodule = None
 
     webServer = HTTPServer((args.host,args.port), DLModelServer)
     print("host: {}\t port: {}".format(args.host,args.port))
