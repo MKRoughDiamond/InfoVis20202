@@ -35,6 +35,7 @@
             margin-top: 2px;
             font-family: "Roboto", sans-serif;
             color: white;
+            background-color: white;
         }
         .c-button-red { background-color: #f44336; }
         .c-button-green { background-color: #4CAF50; }
@@ -564,6 +565,7 @@
             fetch_response.then((data) => {
                 updateSectionC1(data);
                 // TODO (frontend) - Section B, C 부분 update
+                // TODO (frontend) - 업로드하면 대표 latent값도 바뀌게 되는데 B1 슬라이더에 변경된 값 반영할 것
             });
         };
 
