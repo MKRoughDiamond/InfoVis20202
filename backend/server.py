@@ -6,6 +6,7 @@ from io import BytesIO
 import base64
 from DL import *
 import time
+import numpy as np
 
 
 class DLModelServer(BaseHTTPRequestHandler):
@@ -61,6 +62,30 @@ class DLModelServer(BaseHTTPRequestHandler):
         pass
 
 
+    def _gen_imgs(self,latent,res_contents):
+        imgs, latents = ptmodule.tile_imgs_gen(dic['content'][0]['latent'])
+        if imgs is None or latents is None:
+            self._set_headers_failed()
+            return
+        for i in range(len(imgs)):
+            img = Image.fromarray(imgs[i]*255).convert('RGB')
+            res_contents['tile'].append({
+                'latent': latents[i].tolist(),
+                'img': self._img_to_base64(img)
+            })
+        imgs, latents = ptmodule.linear_imgs_gen(dic['content'][0]['latent'])
+        if imgs is None or latents is None:
+            self._set_headers_failed()
+            return
+        for i in range(len(imgs)):
+            img = Image.fromarray(imgs[i]*255).convert('RGB')
+            res_contents['linear'].append({
+                'latent': latents[i].tolist(),
+                'img': self._img_to_base64(img)
+            })
+        return res_contents
+
+
     def do_POST(self):
         content_len = int(self.headers.get('content-length'))
         contents = self.rfile.read(content_len).decode('utf-8')
@@ -86,29 +111,24 @@ class DLModelServer(BaseHTTPRequestHandler):
                         dic['content'][0]['latent'][i] = float(dic['content'][0]['latent'][i])
                     for i in [0,1]:
                         dic['content'][0]['target_idx'][i] = int(dic['content'][0]['target_idx'][i])
+                    if not ptmodule.set_param('target_idx',dic['content'][0]['target_idx']):
+                        raise Exception
+                    res_contents = self._gen_imgs(dic['content'][0]['latent'], res_contents)
                 except Exception:
                     self._set_headers_failed()
                     return
-                imgs, latents = ptmodule.tile_imgs_gen(dic['content'][0]['latent'],dic['content'][0]['target_idx'])
-                if imgs is None or latents is None:
+            elif dic['opcode'] == 'encode_img':
+                res_contents = {}
+                res_contents['tile']=[]
+                res_contents['linear']=[]
+                try:
+                    img = Image.open(BytesIO(base64.b64decode(dic['content'][0]['img'].split(',')[-1])))
+                    img = np.array(img.convert('L'),dtype=np.float32)/255
+                    latent = ptmodule.enc_img(img)
+                    res_contents = self._gen_imgs(latent, res_contents)
+                except Exception:
                     self._set_headers_failed()
                     return
-                for i in range(len(imgs)):
-                    img = Image.fromarray(imgs[i]*255).convert('RGB')
-                    res_contents['tile'].append({
-                        'latent': latents[i].tolist(),
-                        'img': self._img_to_base64(img)
-                    })
-                imgs, latents = ptmodule.linear_imgs_gen(dic['content'][0]['latent'])
-                if imgs is None or latents is None:
-                    self._set_headers_failed()
-                    return
-                for i in range(len(imgs)):
-                    img = Image.fromarray(imgs[i]*255).convert('RGB')
-                    res_contents['linear'].append({
-                        'latent': latents[i].tolist(),
-                        'img': self._img_to_base64(img)
-                    })
             elif dic['opcode'] == 'min_max': # TSNE visualization first, O.W. returns 404
                 mins, maxs = ptmodule.get_min_max()
                 if mins is None or maxs is None:

@@ -31,6 +31,7 @@ class PyTorchModule:
         self._set_tile()
         self.param['delta'] = delta
         self.tsne_model = TSNE
+        self.param['target_idx'] = None
 
     def get_params(self):
         res_contents = {
@@ -60,6 +61,9 @@ class PyTorchModule:
             self._set_tile()
         elif param_name == 'model_name':
             self.set_model(self.param[param_name])
+        elif param_name == 'target_idx':
+            if len(value)!=2:
+                return False
         return True
 
 
@@ -93,19 +97,19 @@ class PyTorchModule:
         return data_x, data_y
 
 
-    def _tile_gen(self,latent,axes):
+    def _tile_gen(self,latent):
         latent = torch.tensor(latent,device=self.device,dtype=torch.float32)
         dup = latent.unsqueeze(-1).unsqueeze(-1).repeat(1,self.param['vis_B_shape'][0],self.param['vis_B_shape'][1])
-        dup[axes[0]]+=self.tile_x*self.param['delta']*(self.maxs[axes[0]]-self.mins[axes[0]])
-        dup[axes[1]]+=self.tile_y*self.param['delta']*(self.maxs[axes[1]]-self.mins[axes[1]])
+        dup[self.param['target_idx'][0]]+=self.tile_x*self.param['delta']*(self.maxs[self.param['target_idx'][0]]-self.mins[self.param['target_idx'][0]])
+        dup[self.param['target_idx'][1]]+=self.tile_y*self.param['delta']*(self.maxs[self.param['target_idx'][1]]-self.mins[self.param['target_idx'][1]])
         dup = dup.view(-1,self.param['vis_B_shape'][0]*self.param['vis_B_shape'][1]).transpose(0,1)
         return dup
 
 
-    def tile_imgs_gen(self,latent,axes):
+    def tile_imgs_gen(self,latent):
         if self.mins is None or self.maxs is None:
             return None, None
-        dup = self._tile_gen(latent,axes)
+        dup = self._tile_gen(latent)
         recon_img = self.model.decoder(dup)
         return recon_img.squeeze().cpu().detach().numpy(), dup.cpu().detach().numpy()
 
@@ -143,3 +147,9 @@ class PyTorchModule:
         latent = latent.cpu().detach().numpy()
         tsne = self.tsne_model(n_components=2).fit_transform(latent)
         return recon_img, latent, tsne, y.cpu().detach().numpy()
+
+
+    def enc_img(self,img):
+        x = torch.tensor(img).unsqueeze(0).to(self.device)
+        recon_img, _, latent = self.model(x)
+        return latent[0].cpu().detach().numpy()
