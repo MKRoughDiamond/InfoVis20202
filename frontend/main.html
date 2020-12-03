@@ -10,13 +10,43 @@
             font-family: "Roboto", sans-serif;
             font-weight: bold
         }
+
+        #canvas-container {
+            display: block;
+            border: 3px solid black;
+            margin: 20px;
+            width: 350px;
+            height: 350px;
+            position: relative;
+            float: left;
+        }
+        canvas {
+            display: block;
+        }
+
+        .c-button {
+            width: 44px;
+            height: 44px;
+            border: 1px solid #ccc;
+            display: inline-block;
+            padding: 1px 1px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 2px;
+            font-family: "Roboto", sans-serif;
+            color: white;
+        }
+        .c-button-red { background-color: #f44336; }
+        .c-button-green { background-color: #4CAF50; }
+        .c-button-blue { background-color: #008CBA; }
+
     </style>
 </head>
 <body>
 <h1 class="w3-text-teal">High-Dimensional Latent Space Visualization</h1>
 <h2 class="w3-text-teal">InfoVis 2020 Term Project - Group E</h2>
 
-<div style="padding-left:20px">
+<div style="padding-left:20px; float: left">
     <div style="width: 1300px; height: 20px">
         <div style="float: left; width: 500px; height: 15px">
             <b>(A) Overall Visualization(t-SNE)</b>
@@ -43,10 +73,39 @@
         </div>
     </div>
 </div>
+<div style="width: 500px; height: 900px; float: right">
+    <div style="width: 500px; height: 20px">
+        <b>C test ㅎ</b>
+    </div>
+    <div style="width: 500px; height: 800px">
+        <div class="w3-border" id="tC1" style="width: 500px; height: 400px">
+            <div id="canvas-container"><canvas id="canvas"></canvas></div>
+            <div style="width: 50px; float: right; padding-top: 10px">
+                <label class="c-button" title="upload image">
+                    <input type="file" id="upload_image" accept="image/*" style="display: none">
+                    <image src="image/upload.png" width="40" height="40"></image>
+                </label>
+                <button id="draw_image" class="c-button" value='0' title="draw image">
+                    <image src="image/draw.png" width="40" height="40"></image>
+                </button>
+                <button id="update_image" class="c-button" style="margin-top: 200px" title="analyze image">
+                    <image src="image/update.png" width="40" height="40"></image>
+                </button>
+            </div>
+            <div style="width: 50px; float: right; padding-top: 10px">
+                <button id="clear" class="c-button c-button-red" style="margin-top: 48px; display: none">clear</button>
+                <button id="undo" class="c-button c-button-green" style="display: none">undo</button>
+                <button id="redo" class="c-button c-button-blue" style="display: none">redo</button>
+            </div>
+        </div>
+        <div class="w3-border" id="tC2" style="width: 500px; height: 400px"></div>
+    </div>
+</div>
 
 
 </body>
 <script src="https://d3js.org/d3.v6.min.js"></script>
+<script src="canvas-free-drawing.min.js"></script>
 <script src="config.js"></script>
 
 <script>
@@ -77,6 +136,11 @@
     let svgB = d3.select('#B').append('svg').attr('width', BWidth).attr('height', ABHeight);
     let svgC = d3.select('#C').append('svg').attr('width', CWidth).attr('height', CHeight);
 
+
+    let drawingCanvas;
+    let drawingCanvasWidth = 344;
+    let drawingCanvasHeight = 344;
+
     fetch(url, {
         method: "GET"
     }).then(
@@ -93,6 +157,9 @@
         makeSectionA();
         makeSectionB();
         makeSectionC();
+
+        // for test
+        makeSectionC1();
     });
 
     function makeSectionA() {
@@ -385,6 +452,143 @@
 
     function makeSectionC() {
         svgC.append('rect').attr('width', CWidth).attr('height', CHeight).style('fill', 'none');
+    }
+
+    //////////////////
+    // user input implementation
+    /////////////////
+
+    function enableDrawing(enable=true) {
+        let draw_button = document.getElementById('draw_image');
+
+        if(enable) {
+            draw_button.value = '1';
+            drawingCanvas.clear();
+            document.getElementById('clear').style.display = 'block';
+            document.getElementById('undo').style.display = 'block';
+            document.getElementById('redo').style.display = 'block';
+            drawingCanvas.enableDrawingMode();
+        }
+        else {
+            draw_button.value = '0';
+            document.getElementById('clear').style.display = 'none';
+            document.getElementById('undo').style.display = 'none';
+            document.getElementById('redo').style.display = 'none';
+            drawingCanvas.disableDrawingMode();
+        }
+    }
+
+    function makeCanvas() {
+        const cfd = new CanvasFreeDrawing.default({
+            elementId: 'canvas',
+            width: drawingCanvasWidth,
+            height: drawingCanvasHeight,
+        });
+
+        // set properties
+        cfd.setLineWidth(30); // in px
+        cfd.setStrokeColor([255, 255, 255]); // in RGB
+        cfd.setBackground([0, 0, 0], true); // in RGB
+
+        // listen to events
+        document.getElementById('clear').onclick = () => cfd.clear();
+        document.getElementById('undo').onclick = () => cfd.undo();
+        document.getElementById('redo').onclick = () => cfd.redo();
+
+        let draw_button = document.getElementById('draw_image');
+        draw_button.onclick = function() {
+            if (draw_button.value === '0') {
+                enableDrawing(true);
+            }
+            else {
+                enableDrawing(false);
+            }
+        };
+
+        return cfd;
+    }
+
+    function makeSectionC1() {
+        // let svgWidth = 400;
+        // let svgHeight = 400;
+        // let margin = {top: 20, right: 20, bottom: 20, left: 20};
+        // let width = svgWidth - margin.left - margin.right;
+        // let height = svgHeight - margin.top - margin.bottom;
+
+        // let canvas = d3.select('#tC1').append('canvas').attr('width', svgWidth).attr('height', svgHeight).attr('id', 'canvas');
+        // let svg = d3.select('#tC1').append('svg').attr('width', svgWidth).attr('height', svgHeight)
+        //     .append('g').attr('transform', `translate(${margin.left}, ${margin.top})`)
+        //     .style('fill', 'none').style('stroke', 'black')
+        //     .append('svg:canvas').attr('id', 'canvas');
+
+        const inputElement = document.getElementById("upload_image");
+
+        inputElement.addEventListener("change", handleFiles, false);
+        function handleFiles() {
+            const file = this.files[0];
+
+            if (FileReader && file) {
+                let fr = new FileReader();
+                fr.onload = function () {
+                    updateCanvas(fr.result);
+                };
+                fr.readAsDataURL(file);
+            }
+        }
+
+        drawingCanvas = makeCanvas();
+
+        document.getElementById("upload_image").onclick = () => enableDrawing(false);
+
+        document.getElementById("update_image").onclick = function() {
+            // TODO (backend) - Query: 이미지를 전송(base64), Response: 이미지의 latent value, tile img, linear img
+            let fetch_response = fetch(url, {
+                method: 'POST',
+                body: JSON.stringify({
+                    opcode: 'encode_img',
+                    content: [
+                        {
+                            'img': drawingCanvas.save()
+                        }
+                    ]
+                })
+            }).then(
+            function (response) {
+                if (!response.ok) {
+                    console.log("Response Error: opcode='encode_img'");
+                    return;
+                }
+                return response.json();
+            });
+
+            fetch_response.then((data) => {
+                updateSectionC1(data);
+                // TODO (frontend) - Section B, C 부분 update
+            });
+        };
+
+        enableDrawing(false);
+    }
+
+    function updateCanvas(image){
+        // canvas.attr('xlink:href', image).attr('width', width).attr('height', height);
+        let canvas = document.getElementById("canvas");
+        let ctx = canvas.getContext("2d");
+        let imgClo = new Image(drawingCanvasWidth, drawingCanvasHeight);
+        imgClo.onload = function() {
+            ctx.drawImage(imgClo, 0, 0, drawingCanvasWidth, drawingCanvasHeight);
+        };
+        imgClo.src = image;
+        enableDrawing(false);
+    }
+
+    // TODO (frontend) - 백엔드로 요청을 보내서 응답을 받아 update를 할때마다 updateSectionC1(data) 실행
+    // backend로부터 fetch_response의 data를 입력받아서 C1의 canvas 이미지를 그려줌.
+    function updateSectionC1(data) {
+        data = data.content.tile;
+        let middleIdx = (num_row_B_image - 1) / 2;
+        let idx = middleIdx * num_row_B_image + middleIdx;
+        updateCanvas('data:image/jpg;base64,' + data[idx].img);
     }
 
 </script>
