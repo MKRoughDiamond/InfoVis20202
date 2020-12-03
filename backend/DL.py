@@ -150,6 +150,6 @@ class PyTorchModule:
 
 
     def enc_img(self,img):
-        x = torch.tensor(img).unsqueeze(0).to(self.device)
+        x = torch.tensor(img).unsqueeze(0).unsqueeze(0).to(self.device)
         recon_img, _, latent = self.model(x)
         return latent[0].cpu().detach().numpy()

@@ -63,7 +63,7 @@ class DLModelServer(BaseHTTPRequestHandler):
 
 
     def _gen_imgs(self,latent,res_contents):
-        imgs, latents = ptmodule.tile_imgs_gen(dic['content'][0]['latent'])
+        imgs, latents = ptmodule.tile_imgs_gen(latent)
         if imgs is None or latents is None:
             self._set_headers_failed()
             return
@@ -73,7 +73,7 @@ class DLModelServer(BaseHTTPRequestHandler):
                 'latent': latents[i].tolist(),
                 'img': self._img_to_base64(img)
             })
-        imgs, latents = ptmodule.linear_imgs_gen(dic['content'][0]['latent'])
+        imgs, latents = ptmodule.linear_imgs_gen(latent)
         if imgs is None or latents is None:
             self._set_headers_failed()
             return
@@ -114,8 +114,9 @@ class DLModelServer(BaseHTTPRequestHandler):
                     if not ptmodule.set_param('target_idx',dic['content'][0]['target_idx']):
                         raise Exception
                     res_contents = self._gen_imgs(dic['content'][0]['latent'], res_contents)
-                except Exception:
+                except Exception as err:
                     self._set_headers_failed()
+                    print(err)
                     return
             elif dic['opcode'] == 'encode_img':
                 res_contents = {}
@@ -123,11 +124,13 @@ class DLModelServer(BaseHTTPRequestHandler):
                 res_contents['linear']=[]
                 try:
                     img = Image.open(BytesIO(base64.b64decode(dic['content'][0]['img'].split(',')[-1])))
+                    img = img.resize((32,32))
                     img = np.array(img.convert('L'),dtype=np.float32)/255
                     latent = ptmodule.enc_img(img)
                     res_contents = self._gen_imgs(latent, res_contents)
-                except Exception:
+                except Exception as err:
                     self._set_headers_failed()
+                    print(err)
                     return
             elif dic['opcode'] == 'min_max': # TSNE visualization first, O.W. returns 404
                 mins, maxs = ptmodule.get_min_max()

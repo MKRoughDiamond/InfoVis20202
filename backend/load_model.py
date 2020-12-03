@@ -43,7 +43,6 @@ def get_dataset(model_name):
             transforms.Resize(32),
             transforms.ToTensor()
         ]), train=False, download=True)
-
     else:
         return MNIST('model/data/mnist', train=False, download=True)
 
