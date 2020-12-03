@@ -112,10 +112,10 @@ class PyTorchModule:
 
     def _linear_gen(self,latent):
         latent = torch.tensor(latent,device=self.device,dtype=torch.float32)
-        dup = latent.unsqueeze(-1).unsqueeze(-1).repeat(1,len(latent),self.param['vis_C_length'])
+        dup = latent.unsqueeze(0).unsqueeze(-1).repeat(len(latent),1,self.param['vis_C_length'])
         for i in range(len(latent)):
-            dup[i]+=self.linear_c*self.param['delta']*(self.maxs[i]-self.mins[i])
-        dup = dup.view(-1,len(latent)*self.param['vis_C_length']).transpose(0,1)
+            dup[i,i]+=(self.linear_c*self.param['delta']*(self.maxs[i]-self.mins[i])).squeeze()
+        dup = dup.view(-1,self.param['vis_C_length']*len(latent)).transpose(0,1)
         return dup
 
 
