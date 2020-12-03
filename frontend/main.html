@@ -365,6 +365,7 @@
             )
 
             tsne.then((data) => {
+                updateSectionC1(data);  // TODO (front) 568 todo 부분 넣어둔 예시. 필요한 모든 부분에 저렇게 넣으면 됨.
                 data = data.content.tile;
                 for (let i = 0; i < num_row_B_image; i++) {
                     for (let j = 0; j < num_row_B_image; j++) {
