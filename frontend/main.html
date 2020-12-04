@@ -5,43 +5,7 @@
 
 <head>
     <link rel="stylesheet" href="style.css"/>
-    <style type="text/css">
-        html, body, h1, h2, h3, h4, h5, h6 {
-            font-family: "Roboto", sans-serif;
-            font-weight: bold
-        }
-
-        #canvas-container {
-            display: block;
-            border: 3px solid black;
-            margin: 20px;
-            width: 350px;
-            height: 350px;
-            position: relative;
-            float: left;
-        }
-        canvas {
-            display: block;
-        }
-
-        .c-button {
-            width: 44px;
-            height: 44px;
-            border: 1px solid #ccc;
-            display: inline-block;
-            padding: 1px 1px;
-            cursor: pointer;
-            border-radius: 4px;
-            margin-top: 2px;
-            font-family: "Roboto", sans-serif;
-            color: white;
-            background-color: white;
-        }
-        .c-button-red { background-color: #f44336; }
-        .c-button-green { background-color: #4CAF50; }
-        .c-button-blue { background-color: #008CBA; }
-
-    </style>
+    <style type="text/css"></style>
 </head>
 <body>
 <h1 class="w3-text-teal">High-Dimensional Latent Space Visualization</h1>
@@ -163,6 +127,10 @@
         makeSectionC1();
     });
 
+    /* Set Initial Params */
+
+    /* Section A */
+
     function makeSectionA() {
         svgA.append('rect').attr('width', AWidth).attr('height', ABHeight).style('fill', 'none');
 
@@ -211,16 +179,13 @@
                     svgA.select('#img').remove();
                 })
                 .on('click', function (event, d) {
-                    let sliders = d3.selectAll("input.slider");
-                    sliders.each(function (d_, i) {
-                        this.value = d.latent[i];
-                        this.oninput();
-                        latent_values[i] = d.latent[i];
-                    })
-                    update_B_image();
+                    updateSectionB1(event, d);
+                    updateSectionB2();
                 });
         });
     }
+
+    /* Section B */
 
     function make_slider_row(i, min_value, max_value) {
         i = i.toString();
@@ -296,7 +261,7 @@
                         }
                     })
                     // image 영역 업데이트
-                    update_B_image();
+                    updateSectionB2();
                 }
                 slider.disabled = true;
             } else {
@@ -318,7 +283,7 @@
             latent_values[i] = slider.value;
             if(num_checked === 2){
                 // image 영역 업데이트
-                update_B_image();
+                updateSectionB2();
             }
         }
 
@@ -326,56 +291,6 @@
         latent_values[i] = slider.value;
 
         return slider_row
-    }
-
-    function update_B_image() {
-
-
-        target_idx = [];
-        let target_checkboxes = d3.selectAll("input.checkbox:checked");
-        target_checkboxes.each(function () {
-            target_idx.push(this.value);
-        })
-        d3.select('#B_yAxis').text(target_idx[0]);
-        d3.select('#B_xAxis').text(target_idx[1]);
-
-        if (target_idx.length !== 2) {
-            console.log('Select only 2 target dimensions.')
-        } else {
-            // Backend에서 data 받아오기
-            let tsne = fetch(url, {
-                method: 'POST',
-                body: JSON.stringify({
-                    opcode: 'latent_imgs',
-                    content: [
-                        {
-                            'latent': latent_values,
-                            'target_idx': target_idx
-                        }
-                    ]
-                })
-            }).then(
-                function (response) {
-                    if (!response.ok) {
-                        console.log("Response Error: opcode='latent_imgs'");
-                        return;
-                    }
-                    return response.json();
-                }
-            )
-
-            tsne.then((data) => {
-                updateSectionC1(data);  // TODO (front) 568 todo 부분 넣어둔 예시. 필요한 모든 부분에 저렇게 넣으면 됨.
-                data = data.content.tile;
-                for (let i = 0; i < num_row_B_image; i++) {
-                    for (let j = 0; j < num_row_B_image; j++) {
-                        d3.select('g.row' + i.toString()+'column' + j.toString())
-                            .append('svg:image').attr('xlink:href', 'data:image/jpg;base64,' + data[i*num_row_B_image+j].img)
-                            .attr('width', '68').attr('height', '68');
-                    }
-                }
-            })
-        }
     }
 
     function makeSectionB() {
@@ -404,7 +319,7 @@
                 let obj = make_slider_row(i, dimension_range.min[i], dimension_range.max[i])
                 B_slider.appendChild(obj)
             }
-            update_B_image()
+            updateSectionB2()
         })
 
 
@@ -452,13 +367,72 @@
 
     }
 
+    function updateSectionB1(event, d){
+        console.log('updateSectionB1')
+        let sliders = d3.selectAll("input.slider");
+        sliders.each(function (d_, i) {
+            this.value = d.latent[i];
+            this.oninput();
+            latent_values[i] = d.latent[i];
+        })
+    }
+
+    function updateSectionB2() {
+        console.log('updateSectionB2')
+
+        target_idx = [];
+        let target_checkboxes = d3.selectAll("input.checkbox:checked");
+        target_checkboxes.each(function () {
+            target_idx.push(this.value);
+        })
+        d3.select('#B_yAxis').text(target_idx[0]);
+        d3.select('#B_xAxis').text(target_idx[1]);
+
+        if (target_idx.length !== 2) {
+            console.log('Select only 2 target dimensions.')
+        } else {
+            // Backend에서 data 받아오기
+            let tsne = fetch(url, {
+                method: 'POST',
+                body: JSON.stringify({
+                    opcode: 'latent_imgs',
+                    content: [
+                        {
+                            'latent': latent_values,
+                            'target_idx': target_idx
+                        }
+                    ]
+                })
+            }).then(
+                function (response) {
+                    if (!response.ok) {
+                        console.log("Response Error: opcode='latent_imgs'");
+                        return;
+                    }
+                    return response.json();
+                }
+            )
+
+            tsne.then((data) => {
+                updateSectionC1(data);  // TODO (front) 577 todo 부분 넣어둔 예시. 필요한 모든 부분에 저렇게 넣으면 됨.
+                data = data.content.tile;
+                for (let i = 0; i < num_row_B_image; i++) {
+                    for (let j = 0; j < num_row_B_image; j++) {
+                        d3.select('g.row' + i.toString()+'column' + j.toString())
+                            .append('svg:image').attr('xlink:href', 'data:image/jpg;base64,' + data[i*num_row_B_image+j].img)
+                            .attr('width', '68').attr('height', '68');
+                    }
+                }
+            })
+        }
+    }
+
+    /* Section C */
+    // user input implementation
+
     function makeSectionC() {
         svgC.append('rect').attr('width', CWidth).attr('height', CHeight).style('fill', 'none');
     }
-
-    //////////////////
-    // user input implementation
-    /////////////////
 
     function enableDrawing(enable=true) {
         let draw_button = document.getElementById('draw_image');
@@ -593,6 +567,8 @@
         let idx = middleIdx * num_row_B_image + middleIdx;
         updateCanvas('data:image/jpg;base64,' + data[idx].img);
     }
+
+    function updateSectionC3(){}
 
 </script>
 </html>
