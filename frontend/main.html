@@ -133,13 +133,9 @@
         console.log(params);
         makeTemporalNumRowSlider()
         makeSectionA();
-        makeSectionB1();
         makeSectionB2();
         makeSectionC();
         makeSectionC3();
-
-        updateSectionC3();
-
 
         // for test
         makeSectionC1();
@@ -164,6 +160,9 @@
         );
         tsne.then((data) => {
             data = data.content;
+            console.log('latent_values:', latent_values)
+            latent_values = data[0].latent;
+            console.log('latent_values:', latent_values)
             circles = svgA.selectAll('circle').data(data).enter().append('circle');
             let xRange = d3.max(data, d => d.tsne_pos[0]) - d3.min(data, d => d.tsne_pos[0]);
             let yRange = d3.max(data, d => d.tsne_pos[1]) - d3.min(data, d => d.tsne_pos[1]);
@@ -199,6 +198,10 @@
                     updateSectionB2();
                     updateSectionC3();
                 });
+
+            // 첫번째 point latent를 대표 latent로 삼아야 해서 여기다 배치함
+            makeSectionB1();
+            updateSectionC3();
         });
     }
 
@@ -206,7 +209,8 @@
 
     function make_slider_row(i, min_value, max_value, step='0.001') {
         i = i.toString();
-        let set_value = (min_value + (max_value - min_value) * Math.random()).toFixed(3).toString();
+        // let set_value = (min_value + (max_value - min_value) * Math.random()).toFixed(3).toString();
+        let set_value = latent_values[i].toFixed(3).toString();
         min_value = min_value.toFixed(3).toString();
         max_value = max_value.toFixed(3).toString();
         let slider_row = document.createElement('div')
