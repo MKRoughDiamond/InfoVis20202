@@ -58,6 +58,10 @@ class PyTorchModule:
         if param_name == 'tsne_length':
             self.small_data = self._data_load(self.param[param_name])
         elif param_name == 'vis_B_shape':
+            try:
+                self.param[param_name] = list(map(lambda x: int(x), self.param[param_name]))
+            except Exception:
+                pass
             self._set_tile()
         elif param_name == 'model_name':
             self.set_model(self.param[param_name])
