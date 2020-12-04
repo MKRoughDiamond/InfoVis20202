@@ -63,6 +63,8 @@ class PyTorchModule:
             except Exception:
                 pass
             self._set_tile()
+        elif param_name == 'vis_C_length':
+            self._set_tile()
         elif param_name == 'model_name':
             self.set_model(self.param[param_name])
         elif param_name == 'target_idx':
