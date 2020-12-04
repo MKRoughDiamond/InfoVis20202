@@ -72,9 +72,9 @@ class PyTorchModule:
 
 
     def _set_tile(self):
-        self.tile_x = torch.arange(self.param['vis_B_shape'][1],dtype=torch.float32).unsqueeze(0).repeat(self.param['vis_B_shape'][0],1).to(self.device)-self.param['vis_B_shape'][1]//2
-        self.tile_y = torch.arange(self.param['vis_B_shape'][1],dtype=torch.float32).unsqueeze(0).repeat(self.param['vis_B_shape'][1],1).transpose(0,1).to(self.device)-self.param['vis_B_shape'][1]//2
-        self.linear_c = torch.arange(self.param['vis_C_length'],dtype=torch.float32).unsqueeze(0).to(self.device)-self.param['vis_C_length']//2
+        self.tile_x = torch.arange(self.param['vis_B_shape'][1]).float().unsqueeze(0).repeat(self.param['vis_B_shape'][0],1).to(self.device)-self.param['vis_B_shape'][1]//2
+        self.tile_y = torch.arange(self.param['vis_B_shape'][1]).float().unsqueeze(0).repeat(self.param['vis_B_shape'][1],1).transpose(0,1).to(self.device)-self.param['vis_B_shape'][1]//2
+        self.linear_c = torch.arange(self.param['vis_C_length']).float().unsqueeze(0).to(self.device)-self.param['vis_C_length']//2
 
 
     def set_model(self,modelname):
@@ -120,7 +120,7 @@ class PyTorchModule:
 
     def _linear_gen(self,latent):
         latent = torch.tensor(latent,device=self.device,dtype=torch.float32)
-        dup = latent.unsqueeze(0).unsqueeze(-1).repeat(len(latent),1,self.param['vis_C_length'])
+        dup = latent.unsqueeze(-1).unsqueeze(-1).repeat(1,len(latent),self.param['vis_C_length'])
         for i in range(len(latent)):
             dup[i,i]+=(self.linear_c*self.param['delta']*(self.maxs[i]-self.mins[i])).squeeze()
         dup = dup.view(-1,self.param['vis_C_length']*len(latent)).transpose(0,1)
