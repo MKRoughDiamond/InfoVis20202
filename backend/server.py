@@ -45,7 +45,6 @@ class DLModelServer(BaseHTTPRequestHandler):
             global ptmodule
             ptmodule = PyTorchModule()
             res_contents = ptmodule.get_params()
-            print(res_contents)
         except Exception:
             self._set_headers_failed()
             return
