@@ -466,28 +466,8 @@
                     return response.json();
                 }
             );
-            fetch(url, {
-                method: "POST",
-                body: JSON.stringify({
-                    opcode: 'set_param',
-                    content: [{
-                        'param_name': 'vis_C_length',
-                        'value': num_row_B_image
-                    }]})
-            }).then(
-                function (response) {
-                    if (!response.ok) {
-                        console.log("set_param Error: vis_B_shape <- [num, num]");
-                        return;
-                    }
-                    console.log('set vis_C_length')
-                    return response.json();
-                }
-            );
             makeSectionB2();
             updateSectionB2();
-            makeSectionC3();
-            updateSectionC3();
         }
         num_row_b_image_slider.oninput = function() {
             num_row_b_image_text.innerHTML = num_row_b_image_slider.value;
