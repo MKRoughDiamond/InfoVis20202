@@ -11,6 +11,9 @@
 <h1 class="w3-text-teal">High-Dimensional Latent Space Visualization</h1>
 <h2 class="w3-text-teal">InfoVis 2020 Term Project - Group E</h2>
 
+<input type="range" id="num_row_b_image_slider" min="3" max="11" value="5" step="2"/>
+<p id="num_row_b_image_text">5</p>
+
 <div style="padding-left:20px; float: left">
     <div style="width: 1300px; height: 20px">
         <div style="float: left; width: 500px; height: 15px">
@@ -23,14 +26,19 @@
     <div style="width: 1300px; height: 400px">
         <div class="w3-border" id="A" style="float: left; width: 500px; height: 400px"></div>
         <div class="w3-border" id="B" style="float: right; width: 795px; height: 400px">
-            <div class="w3-border" id="B_slider"
+            <div class="w3-border" id="B1"
                  style="text-align: center; float: left; width:390px; height:400px; padding:8px 5px"></div>
-            <div class="w3-border" id="B_image"
+            <div class="w3-border" id="B2"
                  style="float: right; width:400px; height:400px"></div>
         </div>
     </div>
     <div style="width: 1300px; height: 400px">
-        <div class="w3-border" id="C" style="float: left; width: 1300px; height: 400px"></div>
+        <div class="w3-border" id="C" style="float: left; width: 1300px; height: 400px">
+            <div class="w3-border" id="CB1"
+                 style="text-align: center; float: left; width:500px; height:400px; padding:8px 5px"></div>
+            <div class="w3-border" id="C3"
+                 style="float: right; width:790px; height:400px"></div>
+        </div>
     </div>
     <div>
         <div style="float: left; width: 1300px; height: 15px">
@@ -88,9 +96,12 @@
     const AImageHeight = 100;
     const ABHeight = 400;
     const CWidth = 1300;
+    const C3Width = 780;
     const CHeight = 400;
     const num_latent = 10;
-    const num_row_B_image = 5; // 5x5=25개의 이미지가 표시됨
+
+    let num_row_B_image = 5; // 5x5=25개의 이미지가 표시됨
+    let vis_C_length = 11;
 
     let dimension_range = {'min': [], 'max': []};
     let target_idx = [0, 1];
@@ -101,6 +112,7 @@
     let svgB = d3.select('#B').append('svg').attr('width', BWidth).attr('height', ABHeight);
     let svgC = d3.select('#C').append('svg').attr('width', CWidth).attr('height', CHeight);
 
+    let B2_image_WH = 68; // sectionB2의 1개의 이미지 크기(5x5일 때 68x68 pixel)
 
     let drawingCanvas;
     let drawingCanvasWidth = 344;
@@ -119,15 +131,19 @@
     ).then((data) => {
         params = data.content;
         console.log(params);
+        makeTemporalNumRowSlider()
         makeSectionA();
-        makeSectionB();
+        makeSectionB1();
+        makeSectionB2();
         makeSectionC();
+        makeSectionC3();
+
+        updateSectionC3();
+
 
         // for test
         makeSectionC1();
     });
-
-    /* Set Initial Params */
 
     /* Section A */
 
@@ -181,13 +197,14 @@
                 .on('click', function (event, d) {
                     updateSectionB1(event, d);
                     updateSectionB2();
+                    updateSectionC3();
                 });
         });
     }
 
     /* Section B */
 
-    function make_slider_row(i, min_value, max_value) {
+    function make_slider_row(i, min_value, max_value, step='0.001') {
         i = i.toString();
         let set_value = (min_value + (max_value - min_value) * Math.random()).toFixed(3).toString();
         min_value = min_value.toFixed(3).toString();
@@ -220,7 +237,7 @@
         slider.setAttribute('type', 'range')
         slider.setAttribute('min', min_value)
         slider.setAttribute('max', max_value)
-        slider.setAttribute('step', '0.001')
+        slider.setAttribute('step', step)
         slider.setAttribute('class', 'slider')
         slider.setAttribute('id', 'B_slider' + i.toString())
 
@@ -262,6 +279,7 @@
                     })
                     // image 영역 업데이트
                     updateSectionB2();
+                    updateSectionC3();
                 }
                 slider.disabled = true;
             } else {
@@ -284,6 +302,7 @@
             if(num_checked === 2){
                 // image 영역 업데이트
                 updateSectionB2();
+                updateSectionC3();
             }
         }
 
@@ -293,11 +312,8 @@
         return slider_row
     }
 
-    function makeSectionB() {
-        let B = document.getElementById('B');
-
-        let B_slider = document.getElementById('B_slider');
-        // let B_image = document.getElementById('B_image');
+    function makeSectionB1() {
+        let B_slider = document.getElementById('B1');
 
         let dimension_minmax = fetch(url, {
             method: 'POST',
@@ -321,12 +337,16 @@
             }
             updateSectionB2()
         })
+    }
 
+    function makeSectionB2(){
+        // 이미지 N x N 만들기
 
-        // 이미지 5x5 만들기
-        // 테두리는 삭제해도 됨(경계 구분 위함)
+        d3.select('#svg_under_B2').remove();
 
-        let B_image = d3.select('#B_image').append('svg').attr('width', 400).attr('height', 400);
+        let B_image = d3.select('#B2').append('svg')
+            .attr('id', 'svg_under_B2')
+            .attr('width', 400).attr('height', ABHeight);
 
         let image_margin = 20;
 
@@ -334,41 +354,18 @@
         B_image.append('text').attr('id', 'B_yAxis').attr('transform', translate(5, ABHeight / 2 + 6)).text(target_idx[0]);
         B_image.append('text').attr('id', 'B_xAxis').attr('transform', translate(ABHeight / 2 - 3, ABHeight - 5)).text(target_idx[1]);
 
-        // 5x5 image 영역 생성
-        let image_area = B_image.append('g')
-            .attr('transform', translate(image_margin,image_margin));
-
         let wh = ABHeight - 2*image_margin;
+        B2_image_WH = wh / num_row_B_image;
 
-        image_area.append('rect')
-            .attr('width', wh).attr('height', wh)
-            .style('fill', 'none').style('stroke', 'red');
-
-        for (let i = 0; i < num_row_B_image; i++) {
-            let i_row_image = image_area.append('g')
-                .attr('transform', translate(0, (wh / num_row_B_image * i).toString()));
-
-            i_row_image.append('rect')
-                .attr('width', wh).attr('height', wh / num_row_B_image)
-                .attr('class', 'row' + i.toString())
-                .style('fill', 'none').style('stroke', 'yellow');
-
-            for (let j = 0; j < num_row_B_image; j++) {
-                let j_column_image = i_row_image.append('g')
-                    .attr('transform', translate((wh / num_row_B_image * j).toString() , 0));
-
-                j_column_image.append('g')
-                    .attr('width', wh / num_row_B_image - 4).attr('height', wh / num_row_B_image - 4)
-                    .attr('transform', translate(2,2))
-                    .attr('class', 'row'+i.toString()+'column' + j.toString())
-                    .style('fill', 'none').style('stroke', 'green');
-            }
-        }
+        // nxn image 영역 생성
+        B_image.append('g')
+            .attr('id', 'nxn_g')
+            .attr('transform', translate(image_margin,image_margin))
+            .attr('width', wh).attr('height', wh);
 
     }
 
     function updateSectionB1(event, d){
-        console.log('updateSectionB1')
         let sliders = d3.selectAll("input.slider");
         sliders.each(function (d_, i) {
             this.value = d.latent[i];
@@ -415,23 +412,90 @@
 
             tsne.then((data) => {
                 updateSectionC1(data);  // TODO (front) 577 todo 부분 넣어둔 예시. 필요한 모든 부분에 저렇게 넣으면 됨.
+                console.log('data.content.tile:',data.content.tile)
                 data = data.content.tile;
-                for (let i = 0; i < num_row_B_image; i++) {
-                    for (let j = 0; j < num_row_B_image; j++) {
-                        d3.select('g.row' + i.toString()+'column' + j.toString())
-                            .append('svg:image').attr('xlink:href', 'data:image/jpg;base64,' + data[i*num_row_B_image+j].img)
-                            .attr('width', '68').attr('height', '68');
-                    }
-                }
+
+                let nxn_g = d3.select('#nxn_g');
+                let image_areas = nxn_g.selectAll('image').data(data);
+                image_areas.enter().append('svg:image')
+                    .merge(image_areas)
+                    .attr('xlink:href', d => 'data:image/jpg;base64,' + d.img)
+                    .attr('width', B2_image_WH)
+                    .attr('height', B2_image_WH)
+                    .attr('transform', (d, i) =>
+                        translate(
+                            B2_image_WH * (i % num_row_B_image),
+                            B2_image_WH * parseInt(i / num_row_B_image)
+                        ))
+                    .on('click', function(event, d){
+                        latent_values = d.latent.map(x => x.toFixed(3).toString());
+                        updateSectionB1(event, d);
+                        updateSectionB2();
+                        updateSectionC3();
+                    })
             })
         }
+    }
+
+    // B2의 이미지 개수를 조절하기 위한 임시 slider를 control함
+    function makeTemporalNumRowSlider(){
+        let num_row_b_image_slider = document.getElementById('num_row_b_image_slider');
+        let num_row_b_image_text = document.getElementById('num_row_b_image_text');
+        num_row_b_image_slider.onchange = function(){
+            num_row_B_image = parseInt(num_row_b_image_slider.value);
+
+            fetch(url, {
+                method: "POST",
+                body: JSON.stringify({
+                    opcode: 'set_param',
+                    content: [{
+                        'param_name': 'vis_B_shape',
+                        'value': [num_row_B_image, num_row_B_image]
+                    }]})
+            }).then(
+                function (response) {
+                    if (!response.ok) {
+                        console.log("set_param Error: vis_B_shape <- [num, num]");
+                        return;
+                    }
+                    console.log('set vis_B_shape')
+                    return response.json();
+                }
+            );
+            fetch(url, {
+                method: "POST",
+                body: JSON.stringify({
+                    opcode: 'set_param',
+                    content: [{
+                        'param_name': 'vis_C_length',
+                        'value': num_row_B_image
+                    }]})
+            }).then(
+                function (response) {
+                    if (!response.ok) {
+                        console.log("set_param Error: vis_B_shape <- [num, num]");
+                        return;
+                    }
+                    console.log('set vis_C_length')
+                    return response.json();
+                }
+            );
+            makeSectionB2();
+            updateSectionB2();
+            makeSectionC3();
+            updateSectionC3();
+        }
+        num_row_b_image_slider.oninput = function() {
+            num_row_b_image_text.innerHTML = num_row_b_image_slider.value;
+        }
+
     }
 
     /* Section C */
     // user input implementation
 
     function makeSectionC() {
-        svgC.append('rect').attr('width', CWidth).attr('height', CHeight).style('fill', 'none');
+        // svgC.append('rect').attr('width', CWidth).attr('height', CHeight).style('fill', 'none');
     }
 
     function enableDrawing(enable=true) {
@@ -568,7 +632,77 @@
         updateCanvas('data:image/jpg;base64,' + data[idx].img);
     }
 
-    function updateSectionC3(){}
+    function makeSectionC3(){
+
+        d3.select('#svg_under_C3').remove();
+
+        let C_image = d3.select('#C3').append('svg')
+            .attr('id', 'svg_under_C3')
+            .attr('width', C3Width).attr('height', CHeight);
+
+        let image_margin = 0;
+
+        C_image.append('g')
+            .attr('id', 'mxn_g')
+            .attr('transform', translate(image_margin, image_margin))
+            .attr('width', C3Width - 2*image_margin)
+            .attr('height', CHeight - 2*image_margin);
+
+    }
+
+
+    function updateSectionC3(){
+        let tsne = fetch(url, {
+            method: 'POST',
+            body: JSON.stringify({
+                opcode: 'latent_imgs',
+                content: [
+                    {
+                        'latent': latent_values,
+                        'target_idx': target_idx
+                    }
+                ]
+            })
+        }).then(
+            function (response) {
+                if (!response.ok) {
+                    console.log("Response Error: opcode='latent_imgs'");
+                    return;
+                }
+                return response.json();
+            }
+        )
+
+        width = 790 / vis_C_length;
+        height = 400 / num_latent;
+        console.log('width, height:', width, height)
+
+        tsne.then((data) => {
+            updateSectionC1(data);  // TODO (front) 577 todo 부분 넣어둔 예시. 필요한 모든 부분에 저렇게 넣으면 됨.
+            console.log('data.content.linear', data.content.linear)
+            data = data.content.linear;
+
+            let nxn_g = d3.select('#mxn_g');
+            let image_areas = nxn_g.selectAll('image').data(data);
+            image_areas.enter().append('svg:image')
+                .merge(image_areas)
+                .attr('xlink:href', d => 'data:image/jpg;base64,' + d.img)
+                .attr('width', width)
+                .attr('height', height)
+                .attr('transform', (d, i) =>
+                    translate(
+                        width  * (i % vis_C_length),
+                        height * parseInt(i / vis_C_length),
+                    ))
+                .on('click', function(event, d){
+                    latent_values = d.latent.map(x => x.toFixed(3).toString());
+                    updateSectionB1(event, d);
+                    updateSectionB2();
+                    updateSectionC3();
+                })
+        })
+
+    }
 
 </script>
 </html>
