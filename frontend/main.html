@@ -8,11 +8,18 @@
     <style type="text/css"></style>
 </head>
 <body>
-<h1 class="w3-text-teal">High-Dimensional Latent Space Visualization</h1>
-<h2 class="w3-text-teal">InfoVis 2020 Term Project - Group E</h2>
-
-<input type="range" id="num_row_b_image_slider" min="3" max="11" value="5" step="2"/>
-<p id="num_row_b_image_text">5</p>
+<div style="width: 1300px;float: left;margin-left:20px">
+    <div style="float: left">
+        <h3 class="w3-text-teal">High-Dimensional Latent Space Visualization</h3>
+    </div>
+    <div style="float: right">
+        <h3 class="w3-text-teal">InfoVis 2020 Term Project - Group E</h3>
+    </div>
+</div>
+<div style="width: 1300px;float: left;margin-left:20px">
+    <input type="range" id="num_row_b_image_slider" min="3" max="11" value="5" step="2"/>
+    <p id="num_row_b_image_text">5</p>
+</div>
 
 <div style="padding-left:20px; float: left">
     <div style="width: 1300px; height: 20px">
@@ -25,19 +32,38 @@
     </div>
     <div style="width: 1300px; height: 400px">
         <div class="w3-border" id="A" style="float: left; width: 500px; height: 400px"></div>
-        <div class="w3-border" id="B" style="float: right; width: 795px; height: 400px">
+        <div id="B" style="float: right; width: 795px; height: 400px">
             <div class="w3-border" id="B1"
                  style="text-align: center; float: left; width:390px; height:400px; padding:8px 5px"></div>
             <div class="w3-border" id="B2"
                  style="float: right; width:400px; height:400px"></div>
         </div>
     </div>
-    <div style="width: 1300px; height: 400px">
-        <div class="w3-border" id="C" style="float: left; width: 1300px; height: 400px">
-            <div class="w3-border" id="CB1"
-                 style="text-align: center; float: left; width:500px; height:400px; padding:8px 5px"></div>
+    <div style="width: 1300px; height: 400px; margin-top: 5px">
+        <div id="C" style="float: left; width: 1300px; height: 400px">
+            <div class="w3-border" id="C1"
+                 style="text-align: center; float: left; width:500px; height:400px">
+                <div id="canvas-container"><canvas id="canvas"></canvas></div>
+                <div style="width: 50px; float: right; padding-top: 10px">
+                    <label class="c-button" title="upload image">
+                        <input type="file" id="upload_image" accept="image/*" style="display: none">
+                        <image src="image/upload.png" width="40" height="40"></image>
+                    </label>
+                    <button id="draw_image" class="c-button" value='0' title="draw image">
+                        <image src="image/draw.png" width="40" height="40"></image>
+                    </button>
+                    <button id="update_image" class="c-button" style="margin-top: 200px" title="analyze image">
+                        <image src="image/update.png" width="40" height="40"></image>
+                    </button>
+                </div>
+                <div style="width: 50px; float: right; padding-top: 10px">
+                    <button id="clear" class="c-button c-button-red" style="margin-top: 48px; display: none">clear</button>
+                    <button id="undo" class="c-button c-button-green" style="display: none">undo</button>
+                    <button id="redo" class="c-button c-button-blue" style="display: none">redo</button>
+                </div>
+            </div>
             <div class="w3-border" id="C3"
-                 style="float: right; width:790px; height:400px"></div>
+                 style="float: right; width:795px; height:400px; padding:5px"></div>
         </div>
     </div>
     <div>
@@ -46,36 +72,6 @@
         </div>
     </div>
 </div>
-<div style="width: 500px; height: 900px; float: right">
-    <div style="width: 500px; height: 20px">
-        <b>C test ㅎ</b>
-    </div>
-    <div style="width: 500px; height: 800px">
-        <div class="w3-border" id="tC1" style="width: 500px; height: 400px">
-            <div id="canvas-container"><canvas id="canvas"></canvas></div>
-            <div style="width: 50px; float: right; padding-top: 10px">
-                <label class="c-button" title="upload image">
-                    <input type="file" id="upload_image" accept="image/*" style="display: none">
-                    <image src="image/upload.png" width="40" height="40"></image>
-                </label>
-                <button id="draw_image" class="c-button" value='0' title="draw image">
-                    <image src="image/draw.png" width="40" height="40"></image>
-                </button>
-                <button id="update_image" class="c-button" style="margin-top: 200px" title="analyze image">
-                    <image src="image/update.png" width="40" height="40"></image>
-                </button>
-            </div>
-            <div style="width: 50px; float: right; padding-top: 10px">
-                <button id="clear" class="c-button c-button-red" style="margin-top: 48px; display: none">clear</button>
-                <button id="undo" class="c-button c-button-green" style="display: none">undo</button>
-                <button id="redo" class="c-button c-button-blue" style="display: none">redo</button>
-            </div>
-        </div>
-        <div class="w3-border" id="tC2" style="width: 500px; height: 400px"></div>
-    </div>
-</div>
-
-
 </body>
 <script src="https://d3js.org/d3.v6.min.js"></script>
 <script src="canvas-free-drawing.min.js"></script>
@@ -393,7 +389,7 @@
             console.log('Select only 2 target dimensions.')
         } else {
             // Backend에서 data 받아오기
-            let tsne = fetch(url, {
+            let res = fetch(url, {
                 method: 'POST',
                 body: JSON.stringify({
                     opcode: 'latent_imgs',
@@ -414,8 +410,8 @@
                 }
             )
 
-            tsne.then((data) => {
-                updateSectionC1(data);  // TODO (front) 577 todo 부분 넣어둔 예시. 필요한 모든 부분에 저렇게 넣으면 됨.
+            res.then((data) => {
+                updateSectionC1(data);
                 console.log('data.content.tile:',data.content.tile)
                 data = data.content.tile;
 
@@ -533,18 +529,6 @@
     }
 
     function makeSectionC1() {
-        // let svgWidth = 400;
-        // let svgHeight = 400;
-        // let margin = {top: 20, right: 20, bottom: 20, left: 20};
-        // let width = svgWidth - margin.left - margin.right;
-        // let height = svgHeight - margin.top - margin.bottom;
-
-        // let canvas = d3.select('#tC1').append('canvas').attr('width', svgWidth).attr('height', svgHeight).attr('id', 'canvas');
-        // let svg = d3.select('#tC1').append('svg').attr('width', svgWidth).attr('height', svgHeight)
-        //     .append('g').attr('transform', `translate(${margin.left}, ${margin.top})`)
-        //     .style('fill', 'none').style('stroke', 'black')
-        //     .append('svg:canvas').attr('id', 'canvas');
-
         const inputElement = document.getElementById("upload_image");
 
         inputElement.addEventListener("change", handleFiles, false);
@@ -607,7 +591,6 @@
         enableDrawing(false);
     }
 
-    // TODO (frontend) - 백엔드로 요청을 보내서 응답을 받아 update를 할때마다 updateSectionC1(data) 실행
     // backend로부터 fetch_response의 data를 입력받아서 C1의 canvas 이미지를 그려줌.
     function updateSectionC1(data) {
         data = data.content.tile;
@@ -636,7 +619,7 @@
 
 
     function updateSectionC3(){
-        let tsne = fetch(url, {
+        let res = fetch(url, {
             method: 'POST',
             body: JSON.stringify({
                 opcode: 'latent_imgs',
@@ -657,11 +640,11 @@
             }
         )
 
-        width = 790 / vis_C_length;
-        height = 400 / num_latent;
+        width = 795 / vis_C_length;
+        height = 390 / num_latent;
         console.log('width, height:', width, height)
 
-        tsne.then((data) => {
+        res.then((data) => {
             updateSectionC1(data);  // TODO (front) 577 todo 부분 넣어둔 예시. 필요한 모든 부분에 저렇게 넣으면 됨.
             console.log('data.content.linear', data.content.linear)
             data = data.content.linear;
