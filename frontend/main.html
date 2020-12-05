@@ -43,7 +43,9 @@
         <div id="C" style="float: left; width: 1300px; height: 400px">
             <div class="w3-border" id="C1"
                  style="text-align: center; float: left; width:500px; height:400px">
-                <div id="canvas-container"><canvas id="canvas"></canvas></div>
+                <div id="canvas-container">
+                    <canvas id="canvas"></canvas>
+                </div>
                 <div style="width: 50px; float: right; padding-top: 10px">
                     <label class="c-button" title="upload image">
                         <input type="file" id="upload_image" accept="image/*" style="display: none">
@@ -57,7 +59,8 @@
                     </button>
                 </div>
                 <div style="width: 50px; float: right; padding-top: 10px">
-                    <button id="clear" class="c-button c-button-red" style="margin-top: 48px; display: none">clear</button>
+                    <button id="clear" class="c-button c-button-red" style="margin-top: 48px; display: none">clear
+                    </button>
                     <button id="undo" class="c-button c-button-green" style="display: none">undo</button>
                     <button id="redo" class="c-button c-button-blue" style="display: none">redo</button>
                 </div>
@@ -130,10 +133,6 @@
         makeTemporalNumRowSlider()
         makeSectionA();
         makeSectionB2();
-        makeSectionC();
-        makeSectionC3();
-
-        // for test
         makeSectionC1();
     });
 
@@ -148,7 +147,7 @@
         }).then(
             function (response) {
                 if (!response.ok) {
-                    console.log("Error");
+                    console.log("Response Error: opcode='tsne'");
                     return;
                 }
                 return response.json();
@@ -156,9 +155,7 @@
         );
         tsne.then((data) => {
             data = data.content;
-            console.log('latent_values:', latent_values)
             latent_values = data[0].latent;
-            console.log('latent_values:', latent_values)
             circles = svgA.selectAll('circle').data(data).enter().append('circle');
             let xRange = d3.max(data, d => d.tsne_pos[0]) - d3.min(data, d => d.tsne_pos[0]);
             let yRange = d3.max(data, d => d.tsne_pos[1]) - d3.min(data, d => d.tsne_pos[1]);
@@ -195,15 +192,16 @@
                     updateSectionC3();
                 });
 
-            // 첫번째 point latent를 대표 latent로 삼아야 해서 여기다 배치함
+            // 첫번째 point latent를 대표 latent로 설정
             makeSectionB1();
+            makeSectionC3();
             updateSectionC3();
         });
     }
 
     /* Section B */
 
-    function make_slider_row(i, min_value, max_value, step='0.001') {
+    function make_slider_row(i, min_value, max_value, step = '0.001') {
         i = i.toString();
         // let set_value = (min_value + (max_value - min_value) * Math.random()).toFixed(3).toString();
         let set_value = latent_values[i].toFixed(3).toString();
@@ -272,8 +270,8 @@
                 num_checked += 1;
                 if (num_checked >= 2) {
                     // checkbox 비활성화
-                    checkboxes.each(function(){
-                        if(this.checked === false){
+                    checkboxes.each(function () {
+                        if (this.checked === false) {
                             this.disabled = true;
                         }
                     })
@@ -284,7 +282,7 @@
                 slider.disabled = true;
             } else {
                 num_checked -= 1;
-                checkboxes.each(function(){
+                checkboxes.each(function () {
                     this.disabled = false;
                 })
                 slider.disabled = false;
@@ -299,7 +297,7 @@
         // slider 이동이 끝날 시
         slider.onchange = function () {
             latent_values[i] = slider.value;
-            if(num_checked === 2){
+            if (num_checked === 2) {
                 // image 영역 업데이트
                 updateSectionB2();
                 updateSectionC3();
@@ -339,7 +337,7 @@
         })
     }
 
-    function makeSectionB2(){
+    function makeSectionB2() {
         // 이미지 N x N 만들기
 
         d3.select('#svg_under_B2').remove();
@@ -354,18 +352,18 @@
         B_image.append('text').attr('id', 'B_yAxis').attr('transform', translate(5, ABHeight / 2 + 6)).text(target_idx[0]);
         B_image.append('text').attr('id', 'B_xAxis').attr('transform', translate(ABHeight / 2 - 3, ABHeight - 5)).text(target_idx[1]);
 
-        let wh = ABHeight - 2*image_margin;
+        let wh = ABHeight - 2 * image_margin;
         B2_image_WH = wh / num_row_B_image;
 
         // nxn image 영역 생성
         B_image.append('g')
             .attr('id', 'nxn_g')
-            .attr('transform', translate(image_margin,image_margin))
+            .attr('transform', translate(image_margin, image_margin))
             .attr('width', wh).attr('height', wh);
 
     }
 
-    function updateSectionB1(event, d){
+    function updateSectionB1(event, d) {
         let sliders = d3.selectAll("input.slider");
         sliders.each(function (d_, i) {
             this.value = d.latent[i];
@@ -374,8 +372,7 @@
         })
     }
 
-    function updateSectionB2() {
-        console.log('updateSectionB2')
+    function updateSectionB2(_data) {
 
         target_idx = [];
         let target_checkboxes = d3.selectAll("input.checkbox:checked");
@@ -388,60 +385,66 @@
         if (target_idx.length !== 2) {
             console.log('Select only 2 target dimensions.')
         } else {
-            // Backend에서 data 받아오기
-            let res = fetch(url, {
-                method: 'POST',
-                body: JSON.stringify({
-                    opcode: 'latent_imgs',
-                    content: [
-                        {
-                            'latent': latent_values,
-                            'target_idx': target_idx
-                        }
-                    ]
-                })
-            }).then(
-                function (response) {
-                    if (!response.ok) {
-                        console.log("Response Error: opcode='latent_imgs'");
-                        return;
-                    }
-                    return response.json();
-                }
-            )
-
-            res.then((data) => {
-                updateSectionC1(data);
-                console.log('data.content.tile:',data.content.tile)
-                data = data.content.tile;
-
-                let nxn_g = d3.select('#nxn_g');
-                let image_areas = nxn_g.selectAll('image').data(data);
-                image_areas.enter().append('svg:image')
-                    .merge(image_areas)
-                    .attr('xlink:href', d => 'data:image/jpg;base64,' + d.img)
-                    .attr('width', B2_image_WH)
-                    .attr('height', B2_image_WH)
-                    .attr('transform', (d, i) =>
-                        translate(
-                            B2_image_WH * (i % num_row_B_image),
-                            B2_image_WH * parseInt(i / num_row_B_image)
-                        ))
-                    .on('click', function(event, d){
-                        latent_values = d.latent.map(x => x.toFixed(3).toString());
-                        updateSectionB1(event, d);
-                        updateSectionB2();
-                        updateSectionC3();
+            if (_data !== undefined) {
+                update(_data);
+            } else {
+                // Backend에서 data 받아오기
+                let res = fetch(url, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        opcode: 'latent_imgs',
+                        content: [
+                            {
+                                'latent': latent_values,
+                                'target_idx': target_idx
+                            }
+                        ]
                     })
-            })
+                }).then(
+                    function (response) {
+                        if (!response.ok) {
+                            console.log("Response Error: opcode='latent_imgs'");
+                            return;
+                        }
+                        return response.json();
+                    }
+                )
+
+                res.then((data) => {
+                    update(data);
+                })
+            }
+        }
+
+        function update(data) {
+            data = data.content.tile;
+
+            let nxn_g = d3.select('#nxn_g');
+            let image_areas = nxn_g.selectAll('image').data(data);
+            image_areas.enter().append('svg:image')
+                .merge(image_areas)
+                .attr('xlink:href', d => 'data:image/jpg;base64,' + d.img)
+                .attr('width', B2_image_WH)
+                .attr('height', B2_image_WH)
+                .attr('transform', (d, i) =>
+                    translate(
+                        B2_image_WH * (i % num_row_B_image),
+                        B2_image_WH * parseInt(i / num_row_B_image)
+                    ))
+                .on('click', function (event, d) {
+                    latent_values = d.latent.map(x => x.toFixed(3).toString());
+                    updateSectionB1(event, d);
+                    updateSectionB2();
+                    updateSectionC3();
+                })
         }
     }
 
     // B2의 이미지 개수를 조절하기 위한 임시 slider를 control함
-    function makeTemporalNumRowSlider(){
+    function makeTemporalNumRowSlider() {
         let num_row_b_image_slider = document.getElementById('num_row_b_image_slider');
         let num_row_b_image_text = document.getElementById('num_row_b_image_text');
-        num_row_b_image_slider.onchange = function(){
+        num_row_b_image_slider.onchange = function () {
             num_row_B_image = parseInt(num_row_b_image_slider.value);
 
             fetch(url, {
@@ -451,7 +454,8 @@
                     content: [{
                         'param_name': 'vis_B_shape',
                         'value': [num_row_B_image, num_row_B_image]
-                    }]})
+                    }]
+                })
             }).then(
                 function (response) {
                     if (!response.ok) {
@@ -465,7 +469,7 @@
             makeSectionB2();
             updateSectionB2();
         }
-        num_row_b_image_slider.oninput = function() {
+        num_row_b_image_slider.oninput = function () {
             num_row_b_image_text.innerHTML = num_row_b_image_slider.value;
         }
 
@@ -474,22 +478,17 @@
     /* Section C */
     // user input implementation
 
-    function makeSectionC() {
-        // svgC.append('rect').attr('width', CWidth).attr('height', CHeight).style('fill', 'none');
-    }
-
-    function enableDrawing(enable=true) {
+    function enableDrawing(enable = true) {
         let draw_button = document.getElementById('draw_image');
 
-        if(enable) {
+        if (enable) {
             draw_button.value = '1';
             drawingCanvas.clear();
             document.getElementById('clear').style.display = 'block';
             document.getElementById('undo').style.display = 'block';
             document.getElementById('redo').style.display = 'block';
             drawingCanvas.enableDrawingMode();
-        }
-        else {
+        } else {
             draw_button.value = '0';
             document.getElementById('clear').style.display = 'none';
             document.getElementById('undo').style.display = 'none';
@@ -516,11 +515,10 @@
         document.getElementById('redo').onclick = () => cfd.redo();
 
         let draw_button = document.getElementById('draw_image');
-        draw_button.onclick = function() {
+        draw_button.onclick = function () {
             if (draw_button.value === '0') {
                 enableDrawing(true);
-            }
-            else {
+            } else {
                 enableDrawing(false);
             }
         };
@@ -532,6 +530,7 @@
         const inputElement = document.getElementById("upload_image");
 
         inputElement.addEventListener("change", handleFiles, false);
+
         function handleFiles() {
             const file = this.files[0];
 
@@ -548,8 +547,7 @@
 
         document.getElementById("upload_image").onclick = () => enableDrawing(false);
 
-        document.getElementById("update_image").onclick = function() {
-            // TODO (backend) - Query: 이미지를 전송(base64), Response: 이미지의 latent value, tile img, linear img
+        document.getElementById("update_image").onclick = function () {
             let fetch_response = fetch(url, {
                 method: 'POST',
                 body: JSON.stringify({
@@ -561,30 +559,30 @@
                     ]
                 })
             }).then(
-            function (response) {
-                if (!response.ok) {
-                    console.log("Response Error: opcode='encode_img'");
-                    return;
-                }
-                return response.json();
-            });
+                function (response) {
+                    if (!response.ok) {
+                        console.log("Response Error: opcode='encode_img'");
+                        return;
+                    }
+                    return response.json();
+                });
 
             fetch_response.then((data) => {
                 updateSectionC1(data);
-                // TODO (frontend) - Section B, C 부분 update
-                // TODO (frontend) - 업로드하면 대표 latent값도 바뀌게 되는데 B1 슬라이더에 변경된 값 반영할 것
+                updateSectionB2(data);
+                updateSectionC3(data);
             });
         };
 
         enableDrawing(false);
     }
 
-    function updateCanvas(image){
+    function updateCanvas(image) {
         // canvas.attr('xlink:href', image).attr('width', width).attr('height', height);
         let canvas = document.getElementById("canvas");
         let ctx = canvas.getContext("2d");
         let imgClo = new Image(drawingCanvasWidth, drawingCanvasHeight);
-        imgClo.onload = function() {
+        imgClo.onload = function () {
             ctx.drawImage(imgClo, 0, 0, drawingCanvasWidth, drawingCanvasHeight);
         };
         imgClo.src = image;
@@ -596,10 +594,11 @@
         data = data.content.tile;
         let middleIdx = (num_row_B_image - 1) / 2;
         let idx = middleIdx * num_row_B_image + middleIdx;
+        updateSectionB1(undefined, data[idx]);
         updateCanvas('data:image/jpg;base64,' + data[idx].img);
     }
 
-    function makeSectionC3(){
+    function makeSectionC3() {
 
         d3.select('#svg_under_C3').remove();
 
@@ -612,41 +611,47 @@
         C_image.append('g')
             .attr('id', 'mxn_g')
             .attr('transform', translate(image_margin, image_margin))
-            .attr('width', C3Width - 2*image_margin)
-            .attr('height', CHeight - 2*image_margin);
+            .attr('width', C3Width - 2 * image_margin)
+            .attr('height', CHeight - 2 * image_margin);
 
     }
 
-
-    function updateSectionC3(){
-        let res = fetch(url, {
-            method: 'POST',
-            body: JSON.stringify({
-                opcode: 'latent_imgs',
-                content: [
-                    {
-                        'latent': latent_values,
-                        'target_idx': target_idx
+    function updateSectionC3(_data) {
+        if (_data !== undefined) {
+            update(_data);
+        } else {
+            let res = fetch(url, {
+                method: 'POST',
+                body: JSON.stringify({
+                    opcode: 'latent_imgs',
+                    content: [
+                        {
+                            'latent': latent_values,
+                            'target_idx': target_idx
+                        }
+                    ]
+                })
+            }).then(
+                function (response) {
+                    if (!response.ok) {
+                        console.log("Response Error: opcode='latent_imgs'");
+                        return;
                     }
-                ]
-            })
-        }).then(
-            function (response) {
-                if (!response.ok) {
-                    console.log("Response Error: opcode='latent_imgs'");
-                    return;
+                    return response.json();
                 }
-                return response.json();
-            }
-        )
+            )
 
-        width = 795 / vis_C_length;
-        height = 390 / num_latent;
-        console.log('width, height:', width, height)
+            width = 795 / vis_C_length;
+            height = 390 / num_latent;
+            console.log('width, height:', width, height)
 
-        res.then((data) => {
-            updateSectionC1(data);  // TODO (front) 577 todo 부분 넣어둔 예시. 필요한 모든 부분에 저렇게 넣으면 됨.
-            console.log('data.content.linear', data.content.linear)
+            res.then((data) => {
+                update(data)
+            })
+        }
+
+        function update(data) {
+            updateSectionC1(data);
             data = data.content.linear;
 
             let nxn_g = d3.select('#mxn_g');
@@ -658,16 +663,19 @@
                 .attr('height', height)
                 .attr('transform', (d, i) =>
                     translate(
-                        width  * (i % vis_C_length),
+                        width * (i % vis_C_length),
                         height * parseInt(i / vis_C_length),
                     ))
-                .on('click', function(event, d){
+                .on('click', function (event, d) {
                     latent_values = d.latent.map(x => x.toFixed(3).toString());
                     updateSectionB1(event, d);
                     updateSectionB2();
                     updateSectionC3();
                 })
-        })
+        }
+    }
+
+    function update_image_area(data){
 
     }
 
