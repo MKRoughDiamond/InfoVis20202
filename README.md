@@ -73,6 +73,10 @@ For InfoVis 2020 final project
 {
     opcode: 'latent_imgs',
     content: {
+        target: {
+            latent: [~,...,~],
+            img: (base64)
+        },
         tile: [
             {
                 latent: [~,...,~],

@@ -591,11 +591,9 @@
 
     // backend로부터 fetch_response의 data를 입력받아서 C1의 canvas 이미지를 그려줌.
     function updateSectionC1(data) {
-        data = data.content.tile;
-        let middleIdx = (num_row_B_image - 1) / 2;
-        let idx = middleIdx * num_row_B_image + middleIdx;
-        updateSectionB1(undefined, data[idx]);
-        updateCanvas('data:image/jpg;base64,' + data[idx].img);
+        target = data.content.target;
+        updateSectionB1(undefined, target);
+        updateCanvas('data:image/jpg;base64,' + target.img);
     }
 
     function makeSectionC3() {
