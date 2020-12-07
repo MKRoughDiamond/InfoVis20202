@@ -65,23 +65,55 @@
                  style="float: left; width:455px; height:400px; padding:5px; margin-left: 5px"></div>
             <div class="w3-border" id="Console"
                  style="float: right; width:335px; height:400px; padding:5px">
-                <div style="height: 50px;margin-top: 10px">
-                    <div style="width: 100px;float:left;margin-left: 15px">
-                        <p id="row_b_image_text"># of tiles</p>
+                <div style="margin-top: 10px; height:30px; padding:10px">
+                    <div style="float:left">
+                        <p style="font-weight: 200"># of tiles: </p>
                     </div>
-                    <div style="width: 200px;float:right">
-                        <input type="range" id="num_row_b_image_slider" min="3" max="11" value="5" step="2" style="width:190px"/>
-                            <p id="num_row_b_image_text">5</p>
+                    <div style="float:right; width: 200px">
+                        <p id="num_row_b_image_text" style="float:left; margin-right:2px">5</p>
+                        <input type="range" id="num_row_b_image_slider" min="3" max="11" value="5" step="2"
+                               style="width:150px; float:right" autocomplete="off"/>
                     </div>
                 </div>
-                <div style="height: 50px">
-                    <div style="width: 100px;float:left;margin-left: 15px">
-                        <p id="temp">temp</p>
+                <div style="height:30px; padding:10px">
+                    <div style="float:left">
+                        <p style="font-weight: 200"># of lines: </p>
                     </div>
-                    <div style="width: 200px;float:right">
-                        <input type="range" id="num_temp" min="3" max="11" value="5" step="2" style="width:190px"/>
-                            <p id="num_temp">5</p>
+                    <div style="float:right; width: 200px">
+                        <p id="num_c_image_text" style="float:left; margin-right:2px">11</p>
+                        <input type="range" id="num_c_image_slider" min="3" max="11" value="11" step="2"
+                               style="width:150px; float:right" autocomplete="off"/>
                     </div>
+                </div>
+                <div style="height:30px; padding:10px">
+                    <div style="float:left">
+                        <p style="font-weight: 200">traversal scale: </p>
+                    </div>
+                    <div style="float:right; width: 200px">
+                        <p id="delta_text" style="float:left; margin-right:2px">0.1</p>
+                        <input type="range" id="delta_slider" min="0.02" max="0.2" value="0.1" step="0.02"
+                               style="width:150px; float:right" autocomplete="off"/>
+                    </div>
+                </div>
+                <div style="height:30px; padding:10px; margin-bottom: 20px">
+                    <div style="float:left">
+                        <p style="font-weight: 200"># of tsne pts: </p>
+                    </div>
+                    <div style="float:right; width: 200px">
+                        <p id="tsne_text" style="float:left; margin-right:2px">100</p>
+                        <input type="range" id="tsne_slider" min="20" max="1000" value="100" step="20"
+                               style="width:150px; float:right" autocomplete="off"/>
+                    </div>
+                </div>
+                <div class="w3-border" style="width: 280px; margin: auto; padding: 10px">
+                    <p style="margin-left: 5px">select model</p>
+                    <label style="margin-top: 5px">
+                        <input type="checkbox" value="betaB" name="model" onclick="selectModel(this)" checked disabled autocomplete="off"/>   &beta;-VAE</label>
+                    <label><input type="checkbox" value="betaH" name="model" onclick="selectModel(this)" autocomplete="off"/>   &beta;-VAE(controlled capacity)</label>
+                    <label><input type="checkbox" value="btcvae" name="model" onclick="selectModel(this)" autocomplete="off"/>   &beta;-TCVAE</label>
+                    <label><input type="checkbox" value="factor" name="model" onclick="selectModel(this)" autocomplete="off"/>   factorVAE</label>
+                    <label><input type="checkbox" value="VAE" name="model" onclick="selectModel(this)" autocomplete="off"/>   VAE</label>
+<!--                    <label><input type="checkbox" name="model" value="betaB">&beta;-VAE</label>-->
                 </div>
             </div>
         </div>
@@ -147,7 +179,7 @@
     ).then((data) => {
         params = data.content;
         console.log(params);
-        makeTemporalNumRowSlider()
+        makeTemporalNumRowSlider();
         makeSectionA();
         makeSectionB2();
         makeSectionC1();
@@ -158,6 +190,10 @@
     function makeSectionA() {
         svgA.append('rect').attr('width', AWidth).attr('height', ABHeight).style('fill', 'none');
 
+        updateSectionA(true);
+    }
+
+    function updateSectionA(isInit=false, onlyA=false) {
         tsne = fetch(url, {
             method: "POST",
             body: JSON.stringify({opcode: 'tsne', content: []})
@@ -173,7 +209,8 @@
         tsne.then((data) => {
             data = data.content;
             latent_values = data[0].latent;
-            circles = svgA.selectAll('circle').data(data).enter().append('circle');
+            let dots = svgA.selectAll('circle').data(data, d => d.latent.toString());
+
             let xRange = d3.max(data, d => d.tsne_pos[0]) - d3.min(data, d => d.tsne_pos[0]);
             let yRange = d3.max(data, d => d.tsne_pos[1]) - d3.min(data, d => d.tsne_pos[1]);
             let xScale = d3.scaleLinear()
@@ -182,7 +219,9 @@
             let yScale = d3.scaleLinear()
                 .domain([d3.min(data, d => d.tsne_pos[1]) - yRange * 0.1, d3.max(data, d => d.tsne_pos[1]) + yRange * 0.1])
                 .range([ABHeight - 5, 5]);
-            circles.style('fill', `rgb(0, 0, 0)`).attr('r', 5)
+
+            dots.enter()
+                .append('circle').style('fill', `rgb(0, 0, 0)`).attr('r', 5)
                 .attr('cx', d => xScale(d.tsne_pos[0]))
                 .attr('cy', d => yScale(d.tsne_pos[1]))
                 .style('fill', d => d3.schemeCategory10[d.label])
@@ -195,6 +234,7 @@
                     if (y + AImageHeight > ABHeight)
                         y -= AImageHeight;
 
+                    d3.select(this).style('stroke','red');
                     svgA.append('svg:image').attr('xlink:href', 'data:image/jpg;base64,' + d.img)
                         .attr('x', x).attr('y', y)
                         .attr('width', AImageWidth).attr('height', AImageHeight).attr('id', 'img');
@@ -202,17 +242,35 @@
                 .on('mouseleave', function (event, d) {
                     d3.select(this).attr('r', 5);
                     svgA.select('#img').remove();
+                    d3.select(this).style('stroke','none');
                 })
                 .on('click', function (event, d) {
                     updateSectionB1(event, d);
                     updateSectionB2();
                     updateSectionC3();
-                });
+                })
+                .style('opacity', 0.0)
+                .transition()
+                .duration(1000)
+                .style('opacity', 1.0);
+
+            dots.style('opacity', 0.0)
+                .transition()
+                .duration(1000)
+                .style('opacity', 1.0);
+
+            dots.exit().remove();
 
             // 첫번째 point latent를 대표 latent로 설정
-            makeSectionB1();
-            makeSectionC3();
-            updateSectionC3();
+            if(!onlyA) {
+                if (isInit) {
+                    makeSectionB1();
+                    makeSectionC3();
+                } else {
+                    updateSectionB2();
+                }
+                updateSectionC3();
+            }
         });
     }
 
@@ -485,17 +543,140 @@
                         console.log("set_param Error: vis_B_shape <- [num, num]");
                         return;
                     }
-                    console.log('set vis_B_shape')
+                    console.log('set vis_B_shape');
                     return response.json();
                 }
             );
             makeSectionB2();
             updateSectionB2();
-        }
+        };
         num_row_b_image_slider.oninput = function () {
             num_row_b_image_text.innerHTML = num_row_b_image_slider.value;
-        }
+        };
 
+        let num_c_image_slider = document.getElementById('num_c_image_slider');
+        let num_c_image_text = document.getElementById('num_c_image_text');
+        num_c_image_slider.onchange = function () {
+            vis_C_length = parseInt(num_c_image_slider.value);
+
+            fetch(url, {
+                method: "POST",
+                body: JSON.stringify({
+                    opcode: 'set_param',
+                    content: [{
+                        'param_name': 'vis_C_length',
+                        'value': vis_C_length
+                    }]
+                })
+            }).then(
+                function (response) {
+                    if (!response.ok) {
+                        console.log("set_param Error: vis_C_length <- num");
+                        return;
+                    }
+                    console.log('set vis_C_length');
+                    return response.json();
+                }
+            );
+            makeSectionC3();
+            updateSectionC3();
+        };
+        num_c_image_slider.oninput = function () {
+            num_c_image_text.innerHTML = num_c_image_slider.value;
+        };
+
+        let delta_slider = document.getElementById('delta_slider');
+        let delta_text = document.getElementById('delta_text');
+        delta_slider.onchange = function () {
+            let delta = parseFloat(delta_slider.value);
+
+            fetch(url, {
+                method: "POST",
+                body: JSON.stringify({
+                    opcode: 'set_param',
+                    content: [{
+                        'param_name': 'delta',
+                        'value': delta
+                    }]
+                })
+            }).then(
+                function (response) {
+                    if (!response.ok) {
+                        console.log("set_param Error: delta <- num");
+                        return;
+                    }
+                    console.log('set delta');
+                    return response.json();
+                }
+            );
+            updateSectionB2();
+            updateSectionC3();
+        };
+        delta_slider.oninput = function () {
+            delta_text.innerHTML = delta_slider.value;
+        };
+
+        let tsne_slider = document.getElementById('tsne_slider');
+        let tsne_text = document.getElementById('tsne_text');
+        tsne_slider.onchange = function () {
+            let tsne_length = parseInt(tsne_slider.value);
+
+            fetch(url, {
+                method: "POST",
+                body: JSON.stringify({
+                    opcode: 'set_param',
+                    content: [{
+                        'param_name': 'tsne_length',
+                        'value': tsne_length
+                    }]
+                })
+            }).then(
+                function (response) {
+                    if (!response.ok) {
+                        console.log("set_param Error: tsne_length <- num");
+                        return;
+                    }
+                    console.log('set tsne_length');
+                    return response.json();
+                }
+            );
+            updateSectionA(false, true);
+        };
+        tsne_slider.oninput = function () {
+            tsne_text.innerHTML = tsne_slider.value;
+        };
+    }
+
+    function selectModel(checkbox) {
+        let checkboxes = document.getElementsByName('model');
+        checkboxes.forEach((item) => {
+            if (item !== checkbox){
+                item.checked = false;
+                item.disabled = false;
+            }
+        });
+        checkbox.disabled = true;
+
+        fetch(url, {
+            method: "POST",
+            body: JSON.stringify({
+                opcode: 'set_param',
+                content: [{
+                    'param_name': 'model_name',
+                    'value': checkbox.value
+                }]
+            })
+        }).then(
+            function (response) {
+                if (!response.ok) {
+                    console.log("set_param Error: model_name <- in [\"betaB\", \"betaH\", \"btcvae\", \"factor\", \"VAE\"]");
+                    return;
+                }
+                console.log('set model_name');
+                return response.json();
+            }
+        );
+        updateSectionA();
     }
 
     /* Section C */
@@ -664,7 +845,7 @@
 
             width = 445 / vis_C_length;
             height = 390 / num_latent;
-            console.log('width, height:', width, height)
+            console.log('width, height:', width, height);
 
             res.then((data) => {
                 update(data)
