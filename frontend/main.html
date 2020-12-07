@@ -7,18 +7,14 @@
     <link rel="stylesheet" href="style.css"/>
     <style type="text/css"></style>
 </head>
-<body>
+<body style="width: 1350px;margin: auto;overflow: hidden">
 <div style="width: 1300px;float: left;margin-left:20px">
     <div style="float: left">
         <h3 class="w3-text-teal">High-Dimensional Latent Space Visualization</h3>
     </div>
     <div style="float: right">
-        <h3 class="w3-text-teal">InfoVis 2020 Term Project - Group E</h3>
+        <h5 class="w3-text-teal">InfoVis 2020 Term Project - Group E</h5>
     </div>
-</div>
-<div style="width: 1300px;float: left;margin-left:20px">
-    <input type="range" id="num_row_b_image_slider" min="3" max="11" value="5" step="2"/>
-    <p id="num_row_b_image_text">5</p>
 </div>
 
 <div style="padding-left:20px; float: left">
@@ -66,11 +62,32 @@
                 </div>
             </div>
             <div class="w3-border" id="C3"
-                 style="float: right; width:795px; height:400px; padding:5px"></div>
+                 style="float: left; width:455px; height:400px; padding:5px; margin-left: 5px"></div>
+            <div class="w3-border" id="Console"
+                 style="float: right; width:335px; height:400px; padding:5px">
+                <div style="height: 50px;margin-top: 10px">
+                    <div style="width: 100px;float:left;margin-left: 15px">
+                        <p id="row_b_image_text"># of tiles</p>
+                    </div>
+                    <div style="width: 200px;float:right">
+                        <input type="range" id="num_row_b_image_slider" min="3" max="11" value="5" step="2" style="width:190px"/>
+                            <p id="num_row_b_image_text">5</p>
+                    </div>
+                </div>
+                <div style="height: 50px">
+                    <div style="width: 100px;float:left;margin-left: 15px">
+                        <p id="temp">temp</p>
+                    </div>
+                    <div style="width: 200px;float:right">
+                        <input type="range" id="num_temp" min="3" max="11" value="5" step="2" style="width:190px"/>
+                            <p id="num_temp">5</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <div>
-        <div style="float: left; width: 1300px; height: 15px">
+        <div style="float: left; width: 955px; height: 15px">
             <b style="float: right">(C) User input(Drawing)</b>
         </div>
     </div>
@@ -424,8 +441,8 @@
             image_areas.enter().append('svg:image')
                 .merge(image_areas)
                 .attr('xlink:href', d => 'data:image/jpg;base64,' + d.img)
-                .attr('width', B2_image_WH)
-                .attr('height', B2_image_WH)
+                .attr('width', B2_image_WH-1)
+                .attr('height', B2_image_WH-1)
                 .attr('transform', (d, i) =>
                     translate(
                         B2_image_WH * (i % num_row_B_image),
@@ -436,6 +453,12 @@
                     updateSectionB1(event, d);
                     updateSectionB2();
                     updateSectionC3();
+                })
+                .on('mouseenter', function (event, d) {
+                    d3.select(this).style('outline','1px solid red');
+                })
+                .on('mouseleave', function (event, d) {
+                    d3.select(this).style('outline','none');
                 })
         }
     }
@@ -639,7 +662,7 @@
                 }
             )
 
-            width = 795 / vis_C_length;
+            width = 445 / vis_C_length;
             height = 390 / num_latent;
             console.log('width, height:', width, height)
 
@@ -657,8 +680,8 @@
             image_areas.enter().append('svg:image')
                 .merge(image_areas)
                 .attr('xlink:href', d => 'data:image/jpg;base64,' + d.img)
-                .attr('width', width)
-                .attr('height', height)
+                .attr('width', width-1)
+                .attr('height', height-1)
                 .attr('transform', (d, i) =>
                     translate(
                         width * (i % vis_C_length),
@@ -669,6 +692,12 @@
                     updateSectionB1(event, d);
                     updateSectionB2();
                     updateSectionC3();
+                })
+                .on('mouseenter', function (event, d) {
+                    d3.select(this).style('outline','1px solid red');
+                })
+                .on('mouseleave', function (event, d) {
+                    d3.select(this).style('outline','none');
                 })
         }
     }
