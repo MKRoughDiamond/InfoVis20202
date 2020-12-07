@@ -147,6 +147,7 @@
     const C3Width = 780;
     const CHeight = 400;
     const num_latent = 10;
+    let params;
 
     let num_row_B_image = 5; // 5x5=25개의 이미지가 표시됨
     let vis_C_length = 11;
@@ -285,6 +286,11 @@
         let slider_row = document.createElement('div')
         slider_row.setAttribute('style', 'height: ' + (400 / num_latent).toString())
 
+        let div_latent = document.createElement('div')
+        div_latent.setAttribute('style', "float:left; width:20px")
+        div_latent.innerHTML = String.fromCharCode(65 + parseInt(i))
+        slider_row.appendChild(div_latent)
+
         let div_checkbox = document.createElement('div')
         div_checkbox.setAttribute('style', "float:left; width:30px")
 
@@ -304,7 +310,7 @@
         slider_row.appendChild(div_min)
 
         let div_slider = document.createElement('div')
-        div_slider.setAttribute('style', "float:left; width:200px")
+        div_slider.setAttribute('style', "float:left; width:150px")
 
         let slider = document.createElement('input')
         slider.setAttribute('type', 'range')
@@ -324,7 +330,7 @@
 
 
         let div_text = document.createElement('div')
-        div_text.setAttribute('style', "float:left; width:40px")
+        div_text.setAttribute('style', "float:right; width:40px; text-align: right; color: rgb(0, 0, 255);")
         let p = document.createElement('p')
         p.innerHTML = set_value
         div_text.appendChild(p)
@@ -421,19 +427,25 @@
             .attr('id', 'svg_under_B2')
             .attr('width', 400).attr('height', ABHeight);
 
-        let image_margin = 20;
 
         // 2개의 latent variable 축 생성
-        B_image.append('text').attr('id', 'B_yAxis').attr('transform', translate(5, ABHeight / 2 + 6)).text(target_idx[0]);
-        B_image.append('text').attr('id', 'B_xAxis').attr('transform', translate(ABHeight / 2 - 3, ABHeight - 5)).text(target_idx[1]);
+        B_image.append('text').attr('id', 'B_yAxis').attr('transform', translate(10, ABHeight / 2 + 26)).text(String.fromCharCode(65 + target_idx[1]));
+        B_image.append('text').attr('id', 'B_xAxis').attr('transform', translate(ABHeight / 2 + 15, 35)).text(String.fromCharCode(65 + target_idx[0]));
 
-        let wh = ABHeight - 2 * image_margin;
+        // latent variable의 최소/최대값 표시
+        let value = (params.delta * 2).toFixed(2);
+        B_image.append('text').attr('id', 'B_yAxis_min').attr('transform', translate(5, 65)).text('-' + value);
+        B_image.append('text').attr('id', 'B_yAxis_max').attr('transform', translate(5, ABHeight - 20)).text(value);
+        B_image.append('text').attr('id', 'B_xAxis_min').attr('transform', translate(50, 35)).text('-' + value);
+        B_image.append('text').attr('id', 'B_xAxis_max').attr('transform', translate(ABHeight - 45, 35)).text(value);
+
+        let wh = ABHeight - 60;
         B2_image_WH = wh / num_row_B_image;
 
         // nxn image 영역 생성
         B_image.append('g')
             .attr('id', 'nxn_g')
-            .attr('transform', translate(image_margin, image_margin))
+            .attr('transform', translate(50, 50))
             .attr('width', wh).attr('height', wh);
 
     }
@@ -441,7 +453,7 @@
     function updateSectionB1(event, d) {
         let sliders = d3.selectAll("input.slider");
         sliders.each(function (d_, i) {
-            this.value = d.latent[i];
+            this.value = d.latent[i].toFixed(3);
             this.oninput();
             latent_values[i] = d.latent[i];
         })
@@ -454,8 +466,15 @@
         target_checkboxes.each(function () {
             target_idx.push(this.value);
         })
-        d3.select('#B_yAxis').text(target_idx[0]);
-        d3.select('#B_xAxis').text(target_idx[1]);
+        d3.select('#B_yAxis').text(String.fromCharCode(65 + parseInt(target_idx[1])));
+        d3.select('#B_xAxis').text(String.fromCharCode(65 + parseInt(target_idx[0])));
+
+        let num = (params.delta * parseInt(parseInt(document.getElementById('num_row_b_image_slider').value) / 2)).toFixed(2);
+        d3.select('#B_yAxis_min').text('-' + num);
+        d3.select('#B_yAxis_max').text(num);
+        d3.select('#B_xAxis_min').text('-' + num);
+        d3.select('#B_xAxis_max').text(num);
+
 
         if (target_idx.length !== 2) {
             console.log('Select only 2 target dimensions.')
@@ -808,13 +827,34 @@
             .attr('id', 'svg_under_C3')
             .attr('width', C3Width).attr('height', CHeight);
 
-        let image_margin = 0;
+        let image_margin = 10;
+        let value = document.getElementById('num_c_image_slider').value;
+        shift = 425 / 11 * parseInt((11-value)/2);
 
         C_image.append('g')
             .attr('id', 'mxn_g')
-            .attr('transform', translate(image_margin, image_margin))
+            .attr('transform', translate(2 * image_margin, 2 * image_margin))
             .attr('width', C3Width - 2 * image_margin)
             .attr('height', CHeight - 2 * image_margin);
+
+        let CyAxis = C_image.append('g')
+            .attr('id', 'CyAxis')
+            .attr('transform', translate(shift, 45));
+
+        CyAxis.selectAll('text').data([...Array(10).keys()]).enter().append('text')
+            .attr('transform', d => translate(0, 370 / 10 * d))
+            .text(d => String.fromCharCode(65 + d));
+
+        let CxAxis = C_image.append('g')
+            .attr('id', 'CyAxis')
+            .attr('transform', translate(20, 15));
+
+
+        CxAxis.selectAll('text').data([...Array(parseInt(value)).keys()])
+            .enter().append('text')
+            .attr('transform', d => translate(shift + 425 / 11 * d, 0))
+            .text(d => (d<=(parseInt(value/2))?"":"+") + (params.delta * (d - parseInt(value/2))).toFixed(2))
+            .style('font-size', 'small');
 
     }
 
@@ -842,10 +882,10 @@
                     return response.json();
                 }
             )
+            // width = 445 / vis_C_length;
+            // height = 390 / num_latent;
 
-            width = 445 / vis_C_length;
-            height = 390 / num_latent;
-            console.log('width, height:', width, height);
+
 
             res.then((data) => {
                 update(data)
@@ -856,8 +896,19 @@
             updateSectionC1(data);
             data = data.content.linear;
 
-            let nxn_g = d3.select('#mxn_g');
-            let image_areas = nxn_g.selectAll('image').data(data);
+
+            width = 425 / 11;
+            height = 370 / num_latent;
+
+            shift = 425 / 11 * parseInt((11-document.getElementById('num_c_image_slider').value)/2);
+
+            console.log(width, height, shift)
+
+            d3.select('#CyAxis').attr('transform', translate(shift, 45))
+
+            let mxn_g = d3.select('#mxn_g');
+
+            let image_areas = mxn_g.selectAll('image').data(data);
             image_areas.enter().append('svg:image')
                 .merge(image_areas)
                 .attr('xlink:href', d => 'data:image/jpg;base64,' + d.img)
@@ -865,7 +916,7 @@
                 .attr('height', height-1)
                 .attr('transform', (d, i) =>
                     translate(
-                        width * (i % vis_C_length),
+                        shift + width * (i % vis_C_length),
                         height * parseInt(i / vis_C_length),
                     ))
                 .on('click', function (event, d) {
