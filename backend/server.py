@@ -72,6 +72,7 @@ class DLModelServer(BaseHTTPRequestHandler):
                 'latent': latents[i].tolist(),
                 'img': self._img_to_base64(img)
             })
+        res_contents['target']=res_contents['tile'][len(imgs)//2]
         imgs, latents = ptmodule.linear_imgs_gen(latent)
         if imgs is None or latents is None:
             self._set_headers_failed()
@@ -105,6 +106,7 @@ class DLModelServer(BaseHTTPRequestHandler):
                 res_contents = {}
                 res_contents['tile']=[]
                 res_contents['linear']=[]
+                res_contents['target']=None
                 try:
                     for i in range(len(dic['content'][0]['latent'])):
                         dic['content'][0]['latent'][i] = float(dic['content'][0]['latent'][i])
@@ -121,6 +123,7 @@ class DLModelServer(BaseHTTPRequestHandler):
                 res_contents = {}
                 res_contents['tile']=[]
                 res_contents['linear']=[]
+                res_contents['target']=None
                 try:
                     img = Image.open(BytesIO(base64.b64decode(dic['content'][0]['img'].split(',')[-1])))
                     img = img.resize((32,32))
