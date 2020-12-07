@@ -7,7 +7,7 @@ from load_model import *
 from sklearn.manifold import TSNE
 
 class PyTorchModule:
-    def __init__(self, dataset_name='MNIST', modelname="betaB", tsne_length=100, vis_B_shape=[5,5], vis_C_length=11, delta=0.05):
+    def __init__(self, dataset_name='MNIST', modelname="betaB", tsne_length=100, vis_B_shape=[5,5], vis_C_length=11, delta=0.1):
         self.param = {}
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.set_model(modelname)

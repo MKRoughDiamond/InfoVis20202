@@ -54,3 +54,15 @@ canvas {
 .c-button-red { background-color: #f44336; }
 .c-button-green { background-color: #4CAF50; }
 .c-button-blue { background-color: #008CBA; }
+
+input[type=checkbox] {
+    vertical-align: middle;
+    position: relative;
+    bottom: 1px;
+    margin-left: 10px;
+    padding-top: 10px;
+}
+
+label {
+    display: block;
+}
