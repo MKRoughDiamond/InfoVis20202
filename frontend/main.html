@@ -1,4 +1,4 @@
-﻿<html>
+<html>
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -505,8 +505,8 @@
         });
 
         // set properties
-        cfd.setLineWidth(30); // in px
-        cfd.setStrokeColor([255, 255, 255]); // in RGB
+        cfd.setLineWidth(20); // in px
+        cfd.setStrokeColor([222, 222, 222]); // in RGB
         cfd.setBackground([0, 0, 0], true); // in RGB
 
         // listen to events
@@ -591,7 +591,7 @@
 
     // backend로부터 fetch_response의 data를 입력받아서 C1의 canvas 이미지를 그려줌.
     function updateSectionC1(data) {
-        target = data.content.target;
+        let target = data.content.target;
         updateSectionB1(undefined, target);
         updateCanvas('data:image/jpg;base64,' + target.img);
     }
