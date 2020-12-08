@@ -862,9 +862,11 @@
 
         d3.select('#svg_under_C2').remove();
 
+
         let C_image = d3.select('#C2').append('svg')
             .attr('id', 'svg_under_C2')
             .attr('width', C2Width).attr('height', CHeight);
+
 
         let image_margin = 10;
         let num_c = document.getElementById('num_c_image_slider').value;
@@ -897,6 +899,16 @@
             .attr('transform', d => translate(shift + 425 / 11 * d, 0))
             .text(d => (d <= (parseInt(num_c / 2)) ? "" : "+") + (scale * (d - parseInt(num_c / 2))).toFixed(2))
             .style('font-size', 'small');
+
+        d3.select('#mxn_g')
+            .append('rect')
+            .attr('x', 425 / 11 * 5)
+            // .attr('y', 45)
+            .attr('width', 425 / 11)
+            .attr('height', 370)
+            .style('fill', 'none')
+            .attr('stroke', '#0000ff')
+            .attr('stroke-width', '3')
 
     }
 
