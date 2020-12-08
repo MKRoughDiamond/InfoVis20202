@@ -51,7 +51,7 @@ python3 -m http.server (FRONTEND_PORT)
 - Click : get latent vector of selected point, update all
 
 <div width="600px" style="margin:auto">
-    <img src="imgs/TSNE.PNG" width="600px">
+    <img src="imgs/TSNE.PNG" width="400px">
 </div>
 
 #### Tiled traversal
@@ -60,7 +60,7 @@ python3 -m http.server (FRONTEND_PORT)
 - Click on image : get latent vector of selected image, update all
 
 <div width="600px" style="margin:auto">
-    <img src="imgs/tiled.PNG" width="600px">
+    <img src="imgs/tiled.PNG" width="800px">
 </div>
 
 #### User Drawing
@@ -70,7 +70,7 @@ python3 -m http.server (FRONTEND_PORT)
 - Send to backend : get latent vector of a new image, update all
 
 <div width="600px" style="margin:auto">
-    <img src="imgs/draw.PNG" width="600px">
+    <img src="imgs/draw.PNG" width="400px">
 </div>
 
 #### Linear traversal
@@ -78,16 +78,16 @@ python3 -m http.server (FRONTEND_PORT)
 - Click on image : get latent vector of selected image, update all
 
 <div width="600px" style="margin:auto">
-    <img src="imgs/linearly.PNG" width="600px">
+    <img src="imgs/linearly.PNG" width="400px">
 </div>
 
 #### Parameter configuration
 - Can modify several parameters
-- # of tiles : change numbers of rows and columns of tiled traversal
-- # of lines : change number of columns of linear traversal
+- Number of tiles : change numbers of rows and columns of tiled traversal
+- Number of lines : change number of columns of linear traversal
 - Traversal scale : change the difference between adjacent images
 - Select model : change the target model
 
 <div width="600px" style="margin:auto">
-    <img src="imgs/configure.PNG" width="600px">
+    <img src="imgs/configure.PNG" width="400px">
 </div>
