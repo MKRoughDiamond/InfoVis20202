@@ -577,11 +577,11 @@
                         return;
                     }
                     console.log('set vis_B_shape');
+                    makeSectionB2();
+                    updateSectionB2();
                     return response.json();
                 }
             );
-            makeSectionB2();
-            updateSectionB2();
         };
         num_row_b_image_slider.oninput = function () {
             num_row_b_image_text.innerHTML = num_row_b_image_slider.value;
@@ -608,11 +608,11 @@
                         return;
                     }
                     console.log('set vis_C_length');
+                    makeSectionC2();
+                    updateSectionC2();
                     return response.json();
                 }
             );
-            makeSectionC2();
-            updateSectionC2();
         };
         num_c_image_slider.oninput = function () {
             num_c_image_text.innerHTML = num_c_image_slider.value;
@@ -639,11 +639,11 @@
                         return;
                     }
                     console.log('set delta');
+                    updateSectionB2();
+                    updateSectionC2();
                     return response.json();
                 }
             );
-            updateSectionB2();
-            updateSectionC2();
         };
         delta_slider.oninput = function () {
             delta_text.innerHTML = delta_slider.value;
@@ -670,10 +670,10 @@
                         return;
                     }
                     console.log('set tsne_length');
+                    updateSectionA(false, true);
                     return response.json();
                 }
             );
-            updateSectionA(false, true);
         };
         tsne_slider.oninput = function () {
             tsne_text.innerHTML = tsne_slider.value;
