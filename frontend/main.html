@@ -22,20 +22,20 @@
         <div style="float: left; width: 510px; height: 15px; text-align:left">
             <b> Overall Visualization(t-SNE)</b>
         </div>
-        <div style="float: left; width: 390px; height: 15px; text-align:left">
-            <b> Current Latent Value</b>
-        </div>
-        <div style="float: right; width: 400px; height: 15px; text-align:right">
+        <div style="float: left; width: 400px; height: 15px; text-align:left">
             <b> Latent Space Traversal (2-dimension, tiled)</b>
+        </div>
+        <div style="float: right; width: 390px; height: 15px; text-align:right">
+            <b> Current Latent Value</b>
         </div>
     </div>
     <div style="width: 1300px; height: 400px">
         <div class="w3-border" id="A" style="float: left; width: 500px; height: 400px"></div>
         <div id="B" style="float: right; width: 795px; height: 400px">
-            <div class="w3-border" id="B1"
-                 style="text-align: center; float: left; width:390px; height:400px; padding:8px 5px"></div>
             <div class="w3-border" id="B2"
-                 style="float: right; width:400px; height:400px"></div>
+                 style="float: left; width:400px; height:400px"></div>
+            <div class="w3-border" id="B1"
+                 style="text-align: center; float: right; width:390px; height:400px; padding:8px 5px"></div>
         </div>
     </div>
     <div style="width: 1300px; height: 400px; margin-top: 5px">
@@ -132,7 +132,7 @@
             <b> Drawing as Input</b>
         </div>
         <div style="float: left; width: 445px; height: 15px; text-align:left">
-            <b> Latent Space Traversal (n-dimension)</b>
+            <b> Latent Space Traversal (n-dimension, linearly)</b>
         </div>
         <div style="float: right; width: 335px; height: 15px; text-align:right">
             <b> Parameters Configuration</b>
@@ -339,15 +339,17 @@
         slider_row.appendChild(div_slider);
 
         let div_max = document.createElement('div');
-        div_max.setAttribute('style', "float:left; width:50px");
+        div_max.setAttribute('style', "float:left; width:45px");
         div_max.innerHTML = max_value;
         slider_row.appendChild(div_max);
 
 
         let div_text = document.createElement('div');
-        div_text.setAttribute('style', "float:right; width:40px; text-align: right; color: rgb(0, 0, 255);");
+        div_text.setAttribute('style', "float:right; width:70px; text-align: right; color: rgb(0, 0, 255);");
         let p = document.createElement('p');
-        p.innerHTML = set_value;
+        p.setAttribute('style', "float: right")
+        console.log('set_value:', typeof set_value, set_value)
+        p.innerHTML = ((parseFloat(set_value) < 0) ? "" : "+") + parseFloat(set_value).toFixed(3);
         div_text.appendChild(p);
         slider_row.appendChild(div_text);
 
@@ -387,7 +389,7 @@
 
         // slider 이동 시
         slider.oninput = function () {
-            p.innerHTML = slider.value;
+            p.innerHTML = ((parseFloat(slider.value) < 0) ? "" : "+") + parseFloat(slider.value).toFixed(3);
         }
 
         // slider 이동이 끝날 시
@@ -448,8 +450,10 @@
         B_image.append('text').attr('id', 'B_xAxis').attr('transform', translate(ABHeight / 2 + 15, 35)).text(String.fromCharCode(65 + target_idx[0]));
 
         // latent variable의 최소/최대값 표시
-        let scale = document.getElementById('delta_slider').value;
-        let value = parseFloat(scale).toFixed(2);
+        let scale = parseFloat(document.getElementById('delta_slider').value);
+        let num_row = parseInt(parseFloat(document.getElementById('num_row_b_image_slider').value) / 2);
+        let value = (scale * num_row).toFixed(2);
+        console.log(scale, num_row, value);
         B_image.append('text').attr('id', 'B_yAxis_min').attr('transform', translate(5, 65)).text('-' + value);
         B_image.append('text').attr('id', 'B_yAxis_max').attr('transform', translate(5, ABHeight - 20)).text(value);
         B_image.append('text').attr('id', 'B_xAxis_min').attr('transform', translate(50, 35)).text('-' + value);
@@ -484,8 +488,10 @@
         d3.select('#B_yAxis').text(String.fromCharCode(65 + parseInt(target_idx[1])));
         d3.select('#B_xAxis').text(String.fromCharCode(65 + parseInt(target_idx[0])));
 
-        let scale = document.getElementById('delta_slider').value;
-        let value = parseFloat(scale).toFixed(2);
+        let scale = parseFloat(document.getElementById('delta_slider').value);
+        let num_b = parseInt(parseFloat(document.getElementById('num_row_b_image_slider').value) / 2);
+        let value = (scale * num_b).toFixed(2);
+        console.log(scale, num_b, value);
 
         d3.select('#B_yAxis_min').text('-' + value);
         d3.select('#B_yAxis_max').text(value);
@@ -873,7 +879,7 @@
         CxAxis.selectAll('text').data([...Array(parseInt(num_c)).keys()])
             .enter().append('text')
             .attr('transform', d => translate(shift + 425 / 11 * d, 0))
-            .text(d => (d <= (parseInt(num_c / 2)) ? "" : "+") + ((scale / 2) * (d - parseInt(num_c / 2))).toFixed(2))
+            .text(d => (d <= (parseInt(num_c / 2)) ? "" : "+") + (scale * (d - parseInt(num_c / 2))).toFixed(2))
             .style('font-size', 'small');
 
     }
@@ -917,9 +923,10 @@
 
             let num_c = document.getElementById('num_c_image_slider').value;
             let scale = document.getElementById('delta_slider').value;
+            let num_b = parseInt(parseFloat(document.getElementById('num_row_b_image_slider').value) / 2);
             console.log('asdf', typeof scale, scale)
 
-            let value = parseFloat(scale).toFixed(2);
+            let value = parseFloat(scale * num_b).toFixed(2);
             console.log('value', value)
 
             console.log(width, height, shift)
@@ -927,7 +934,7 @@
             d3.select('#CyAxis').attr('transform', translate(shift, 45))
 
             d3.select('#CxAxis').selectAll('text')
-                .text(d => (d <= (parseInt(num_c / 2)) ? "" : "+") + ((scale / 2) * (d - parseInt(num_c / 2))).toFixed(2));
+                .text(d => (d <= (parseInt(num_c / 2)) ? "" : "+") + (scale * (d - parseInt(num_c / 2))).toFixed(2));
 
             d3.select('#B_yAxis_min').text('-' + value);
             d3.select('#B_yAxis_max').text(value);
