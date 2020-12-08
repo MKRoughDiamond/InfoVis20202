@@ -28,9 +28,10 @@ p {
 #canvas-container {
     display: block;
     border: 3px solid black;
-    margin: 20px;
-    width: 350px;
-    height: 350px;
+    margin-left: 30px;
+    margin-top: 10px;
+    width: 380px;
+    height: 380px;
     position: relative;
     float: left;
 }
