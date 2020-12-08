@@ -1,117 +1,45 @@
-# InfoVis20202
-For InfoVis 2020 final project
+# High-Dimensional Latent Space Visualization
 
-### Query spec
+### Environment (Recommended)
+- Frontend
+  - d3.js
+  - canvas-free-drawing.js [(Link)](https://github.com/federico-moretti/canvas-free-drawing)
+- Backend
+  - Python == 3.6.10
+  - torch == 1.5.0
+  - torchvision == 0.6.0
+  - Pillow == 7.1.2
+  - numpy == 1.18.5
+  - sklearn == 0.23.1
+  - argparse
 
-1. Getter and Setter of model
-- Backend Response (GET)
+### Installing & Settings
+#### Backend
+- Install pretrained model
 ```
-{
-    model_name: "betaB",
-    tsne_length: t,
-    vis_B_shape: [a,b],
-    vis_C_length: c,
-    delta: d
-}
+git submodule update --init --recursive
+git clone --recursive https://github.com/MKRoughdiamond/InfoVis20202.git
+pip install -r backend/model/requirements.txt
 ```
-- Frontend Query (POST)
+  - Backend server setting
 ```
-{
-    opcode: 'set_param',
-    content: [
-        {
-            param_name: "delta",
-            value: d
-        }
-    ]
-}
-```
-
-2. TSNE Visualization
-    - x,y,~ : Real number
-    - z : Integer
-- Frontend Query (POST)
-```
-{
-    opcode: 'tsne',
-    content: []
-}
-```
-- Backend Response
-```
-{
-    opcode: 'tsne',
-    content: [
-        {
-            latent: [~,...,~],
-            img: (base64),
-            tsne_pos: [x,y],
-            label: z
-        },
-        , ...
-    ]
-}
+python3 server.py -host (HOST_IP) -port (PORT)
 ```
 
-3. Latent Visualization
-    - ~ : Real number
-    - a, b : Integer (index of dimension)
-- Frontend Query (POST)
+#### Frontend
+- Fix config.js to connect backend
 ```
-{
-    opcode: 'latent_imgs'
-    content: [
-        {
-            latent: [~,...,~],
-            target_idx: [a,b]
-        }
-    ]
-}
+cp config_example.js config.js
+vi config.js
 ```
-- Backend Response
+  - `config.js`
+```javascript
+const host = '(BACKEND_IP)';
+const port = '(BACKEND_PORT)';
 ```
-{
-    opcode: 'latent_imgs',
-    content: {
-        target: {
-            latent: [~,...,~],
-            img: (base64)
-        },
-        tile: [
-            {
-                latent: [~,...,~],
-                img: (base64)
-            }, ...
-        ],
-        linear: [
-            {
-                latent: [~,...,~],
-                img: (base64)
-            }, ...
-        ]
-    }
-}
+- Frontend server setting
+```
+python3 -m http.server (FRONTEND_PORT)
 ```
 
-
-4. Get min and max of each dimension
-    - ~ : Real number
-- Frontend Query (POST)
-```
-{
-    opcode: 'min_max',
-    content: []
-}
-```
-- Backend Response
-```
-{
-    opcode: 'min_max',
-    content: [
-        {
-            'min': [~,...,~],
-            'max': [~,...,~]
-        }
-    ]
-}
-```
+### Temp

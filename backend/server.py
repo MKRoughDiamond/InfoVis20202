@@ -185,8 +185,8 @@ class DLModelServer(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-host", type=str, default='147.46.215.63')
-    parser.add_argument("-port", type=int, default=37373)
+    parser.add_argument("-host", type=str, default=None)
+    parser.add_argument("-port", type=int, default=None)
     args = parser.parse_args()
 
     ptmodule = None
