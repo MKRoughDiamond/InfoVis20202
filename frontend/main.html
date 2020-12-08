@@ -19,11 +19,14 @@
 
 <div style="padding-left:20px; float: left">
     <div style="width: 1300px; height: 20px">
-        <div style="float: left; width: 500px; height: 15px">
-            <b>(A) Overall Visualization(t-SNE)</b>
+        <div style="float: left; width: 510px; height: 15px; text-align:left">
+            <b> Overall Visualization(t-SNE)</b>
         </div>
-        <div style="float: right; width: 800px; height: 15px">
-            <b style="float: right">(B) Latent Space Traversal (2 dimension)</b>
+        <div style="float: left; width: 390px; height: 15px; text-align:left">
+            <b> Current Latent Value</b>
+        </div>
+        <div style="float: right; width: 400px; height: 15px; text-align:right">
+            <b> Latent Space Traversal (2-dimension, tiled)</b>
         </div>
     </div>
     <div style="width: 1300px; height: 400px">
@@ -61,7 +64,7 @@
                 <div style="width: 50px; float: right; padding-top: 10px">
                 </div>
             </div>
-            <div class="w3-border" id="C3"
+            <div class="w3-border" id="C2"
                  style="float: left; width:455px; height:400px; padding:5px; margin-left: 5px"></div>
             <div class="w3-border" id="Console"
                  style="float: right; width:335px; height:400px; padding:5px">
@@ -108,19 +111,30 @@
                 <div class="w3-border" style="width: 280px; margin: auto; padding: 10px">
                     <p style="margin-left: 5px">select model</p>
                     <label style="margin-top: 5px">
-                        <input type="checkbox" value="betaB" name="model" onclick="selectModel(this)" checked disabled autocomplete="off"/>   &beta;-VAE</label>
-                    <label><input type="checkbox" value="betaH" name="model" onclick="selectModel(this)" autocomplete="off"/>   &beta;-VAE(controlled capacity)</label>
-                    <label><input type="checkbox" value="btcvae" name="model" onclick="selectModel(this)" autocomplete="off"/>   &beta;-TCVAE</label>
-                    <label><input type="checkbox" value="factor" name="model" onclick="selectModel(this)" autocomplete="off"/>   factorVAE</label>
-                    <label><input type="checkbox" value="VAE" name="model" onclick="selectModel(this)" autocomplete="off"/>   VAE</label>
-<!--                    <label><input type="checkbox" name="model" value="betaB">&beta;-VAE</label>-->
+                        <input type="checkbox" value="betaB" name="model" onclick="selectModel(this)" checked disabled
+                               autocomplete="off"/> &beta;-VAE</label>
+                    <label><input type="checkbox" value="betaH" name="model" onclick="selectModel(this)"
+                                  autocomplete="off"/> &beta;-VAE(controlled capacity)</label>
+                    <label><input type="checkbox" value="btcvae" name="model" onclick="selectModel(this)"
+                                  autocomplete="off"/> &beta;-TCVAE</label>
+                    <label><input type="checkbox" value="factor" name="model" onclick="selectModel(this)"
+                                  autocomplete="off"/> factorVAE</label>
+                    <label><input type="checkbox" value="VAE" name="model" onclick="selectModel(this)"
+                                  autocomplete="off"/> VAE</label>
+                    <!--                    <label><input type="checkbox" name="model" value="betaB">&beta;-VAE</label>-->
                 </div>
             </div>
         </div>
     </div>
     <div>
-        <div style="float: left; width: 955px">
-            <b style="float: right">(C) User input(Drawing)</b>
+        <div style="float: left; width: 510px; height: 15px; text-align:left">
+            <b> Drawing as Input</b>
+        </div>
+        <div style="float: left; width: 445px; height: 15px; text-align:left">
+            <b> Latent Space Traversal (n-dimension)</b>
+        </div>
+        <div style="float: right; width: 335px; height: 15px; text-align:right">
+            <b> Parameters Configuration</b>
         </div>
     </div>
 </div>
@@ -144,12 +158,12 @@
     const AImageHeight = 100;
     const ABHeight = 400;
     const CWidth = 1300;
-    const C3Width = 780;
+    const C2Width = 780;
     const CHeight = 400;
     const num_latent = 10;
     let params;
 
-    let num_row_B_image = 5; // 5x5=25개의 이미지가 표시됨
+    let num_row_B_image = 5; // tiled 영역에 5x5=25개의 이미지가 표시됨
     let vis_C_length = 11;
 
     let dimension_range = {'min': [], 'max': []};
@@ -180,7 +194,7 @@
     ).then((data) => {
         params = data.content;
         console.log(params);
-        makeTemporalNumRowSlider();
+        makeConsole();
         makeSectionA();
         makeSectionB2();
         makeSectionC1();
@@ -194,7 +208,7 @@
         updateSectionA(true);
     }
 
-    function updateSectionA(isInit=false, onlyA=false) {
+    function updateSectionA(isInit = false, onlyA = false) {
         tsne = fetch(url, {
             method: "POST",
             body: JSON.stringify({opcode: 'tsne', content: []})
@@ -235,7 +249,7 @@
                     if (y + AImageHeight > ABHeight)
                         y -= AImageHeight;
 
-                    d3.select(this).style('stroke','red');
+                    d3.select(this).style('stroke', 'red');
                     svgA.append('svg:image').attr('xlink:href', 'data:image/jpg;base64,' + d.img)
                         .attr('x', x).attr('y', y)
                         .attr('width', AImageWidth).attr('height', AImageHeight).attr('id', 'img');
@@ -243,12 +257,12 @@
                 .on('mouseleave', function (event, d) {
                     d3.select(this).attr('r', 5);
                     svgA.select('#img').remove();
-                    d3.select(this).style('stroke','none');
+                    d3.select(this).style('stroke', 'none');
                 })
                 .on('click', function (event, d) {
                     updateSectionB1(event, d);
                     updateSectionB2();
-                    updateSectionC3();
+                    updateSectionC2();
                 })
                 .style('opacity', 0.0)
                 .transition()
@@ -263,14 +277,14 @@
             dots.exit().remove();
 
             // 첫번째 point latent를 대표 latent로 설정
-            if(!onlyA) {
+            if (!onlyA) {
                 if (isInit) {
                     makeSectionB1();
-                    makeSectionC3();
+                    makeSectionC2();
                 } else {
                     updateSectionB2();
                 }
-                updateSectionC3();
+                updateSectionC2();
             }
         });
     }
@@ -279,62 +293,62 @@
 
     function make_slider_row(i, min_value, max_value, step = '0.001') {
         i = i.toString();
-        // let set_value = (min_value + (max_value - min_value) * Math.random()).toFixed(3).toString();
         let set_value = latent_values[i].toFixed(3).toString();
         min_value = min_value.toFixed(3).toString();
         max_value = max_value.toFixed(3).toString();
-        let slider_row = document.createElement('div')
-        slider_row.setAttribute('style', 'height: ' + (400 / num_latent).toString())
 
-        let div_latent = document.createElement('div')
-        div_latent.setAttribute('style', "float:left; width:20px")
-        div_latent.innerHTML = String.fromCharCode(65 + parseInt(i))
-        slider_row.appendChild(div_latent)
+        let slider_row = document.createElement('div');
+        slider_row.setAttribute('style', 'height: ' + (400 / num_latent).toString());
 
-        let div_checkbox = document.createElement('div')
-        div_checkbox.setAttribute('style', "float:left; width:30px")
+        let div_latent = document.createElement('div');
+        div_latent.setAttribute('style', "float:left; width:20px");
+        div_latent.innerHTML = String.fromCharCode(65 + parseInt(i));
+        slider_row.appendChild(div_latent);
 
-        let checkbox = document.createElement('input')
-        checkbox.setAttribute('type', 'checkbox')
-        checkbox.setAttribute('name', 'latent')
-        checkbox.setAttribute('value', i)
-        checkbox.setAttribute('class', 'checkbox')
-        checkbox.setAttribute('style', "width:20px; height:20px;")
+        let div_checkbox = document.createElement('div');
+        div_checkbox.setAttribute('style', "float:left; width:30px");
 
-        div_checkbox.appendChild(checkbox)
-        slider_row.appendChild(div_checkbox)
+        let checkbox = document.createElement('input');
+        checkbox.setAttribute('type', 'checkbox');
+        checkbox.setAttribute('name', 'latent');
+        checkbox.setAttribute('value', i);
+        checkbox.setAttribute('class', 'checkbox');
+        checkbox.setAttribute('style', "width:20px; height:20px;");
 
-        let div_min = document.createElement('div')
-        div_min.setAttribute('style', "float:left; width:50px")
-        div_min.innerHTML = min_value
-        slider_row.appendChild(div_min)
+        div_checkbox.appendChild(checkbox);
+        slider_row.appendChild(div_checkbox);
 
-        let div_slider = document.createElement('div')
-        div_slider.setAttribute('style', "float:left; width:150px")
+        let div_min = document.createElement('div');
+        div_min.setAttribute('style', "float:left; width:50px");
+        div_min.innerHTML = min_value;
+        slider_row.appendChild(div_min);
 
-        let slider = document.createElement('input')
-        slider.setAttribute('type', 'range')
-        slider.setAttribute('min', min_value)
-        slider.setAttribute('max', max_value)
-        slider.setAttribute('step', step)
-        slider.setAttribute('class', 'slider')
-        slider.setAttribute('id', 'B_slider' + i.toString())
+        let div_slider = document.createElement('div');
+        div_slider.setAttribute('style', "float:left; width:150px");
 
-        div_slider.appendChild(slider)
-        slider_row.appendChild(div_slider)
+        let slider = document.createElement('input');
+        slider.setAttribute('type', 'range');
+        slider.setAttribute('min', min_value);
+        slider.setAttribute('max', max_value);
+        slider.setAttribute('step', step);
+        slider.setAttribute('class', 'slider');
+        slider.setAttribute('id', 'B_slider' + i.toString());
 
-        let div_max = document.createElement('div')
-        div_max.setAttribute('style', "float:left; width:50px")
-        div_max.innerHTML = max_value
-        slider_row.appendChild(div_max)
+        div_slider.appendChild(slider);
+        slider_row.appendChild(div_slider);
+
+        let div_max = document.createElement('div');
+        div_max.setAttribute('style', "float:left; width:50px");
+        div_max.innerHTML = max_value;
+        slider_row.appendChild(div_max);
 
 
-        let div_text = document.createElement('div')
-        div_text.setAttribute('style', "float:right; width:40px; text-align: right; color: rgb(0, 0, 255);")
-        let p = document.createElement('p')
-        p.innerHTML = set_value
-        div_text.appendChild(p)
-        slider_row.appendChild(div_text)
+        let div_text = document.createElement('div');
+        div_text.setAttribute('style', "float:right; width:40px; text-align: right; color: rgb(0, 0, 255);");
+        let p = document.createElement('p');
+        p.innerHTML = set_value;
+        div_text.appendChild(p);
+        slider_row.appendChild(div_text);
 
 
         if (i < 2) {
@@ -358,7 +372,7 @@
                     })
                     // image 영역 업데이트
                     updateSectionB2();
-                    updateSectionC3();
+                    updateSectionC2();
                 }
                 slider.disabled = true;
             } else {
@@ -381,14 +395,14 @@
             if (num_checked === 2) {
                 // image 영역 업데이트
                 updateSectionB2();
-                updateSectionC3();
+                updateSectionC2();
             }
         }
 
-        slider.setAttribute('value', set_value)
+        slider.setAttribute('value', set_value);
         latent_values[i] = slider.value;
 
-        return slider_row
+        return slider_row;
     }
 
     function makeSectionB1() {
@@ -412,9 +426,9 @@
 
             for (let i = 0; i < num_latent; i++) {
                 let obj = make_slider_row(i, dimension_range.min[i], dimension_range.max[i])
-                B_slider.appendChild(obj)
+                B_slider.appendChild(obj);
             }
-            updateSectionB2()
+            updateSectionB2();
         })
     }
 
@@ -518,8 +532,8 @@
             image_areas.enter().append('svg:image')
                 .merge(image_areas)
                 .attr('xlink:href', d => 'data:image/jpg;base64,' + d.img)
-                .attr('width', B2_image_WH-1)
-                .attr('height', B2_image_WH-1)
+                .attr('width', B2_image_WH - 1)
+                .attr('height', B2_image_WH - 1)
                 .attr('transform', (d, i) =>
                     translate(
                         B2_image_WH * (i % num_row_B_image),
@@ -529,19 +543,19 @@
                     latent_values = d.latent.map(x => x.toFixed(3).toString());
                     updateSectionB1(event, d);
                     updateSectionB2();
-                    updateSectionC3();
+                    updateSectionC2();
                 })
                 .on('mouseenter', function (event, d) {
-                    d3.select(this).style('outline','1px solid red');
+                    d3.select(this).style('outline', '1px solid red');
                 })
                 .on('mouseleave', function (event, d) {
-                    d3.select(this).style('outline','none');
+                    d3.select(this).style('outline', 'none');
                 })
         }
     }
 
-    // B2의 이미지 개수를 조절하기 위한 임시 slider를 control함
-    function makeTemporalNumRowSlider() {
+    // Parameters Configuration console을 생성 및 조절
+    function makeConsole() {
         let num_row_b_image_slider = document.getElementById('num_row_b_image_slider');
         let num_row_b_image_text = document.getElementById('num_row_b_image_text');
         num_row_b_image_slider.onchange = function () {
@@ -597,8 +611,8 @@
                     return response.json();
                 }
             );
-            makeSectionC3();
-            updateSectionC3();
+            makeSectionC2();
+            updateSectionC2();
         };
         num_c_image_slider.oninput = function () {
             num_c_image_text.innerHTML = num_c_image_slider.value;
@@ -629,7 +643,7 @@
                 }
             );
             updateSectionB2();
-            updateSectionC3();
+            updateSectionC2();
         };
         delta_slider.oninput = function () {
             delta_text.innerHTML = delta_slider.value;
@@ -669,7 +683,7 @@
     function selectModel(checkbox) {
         let checkboxes = document.getElementsByName('model');
         checkboxes.forEach((item) => {
-            if (item !== checkbox){
+            if (item !== checkbox) {
                 item.checked = false;
                 item.disabled = false;
             }
@@ -793,7 +807,7 @@
             fetch_response.then((data) => {
                 updateSectionC1(data);
                 updateSectionB2(data);
-                updateSectionC3(data);
+                updateSectionC2(data);
             });
         };
 
@@ -819,22 +833,22 @@
         updateCanvas('data:image/jpg;base64,' + target.img);
     }
 
-    function makeSectionC3() {
+    function makeSectionC2() {
 
-        d3.select('#svg_under_C3').remove();
+        d3.select('#svg_under_C2').remove();
 
-        let C_image = d3.select('#C3').append('svg')
-            .attr('id', 'svg_under_C3')
-            .attr('width', C3Width).attr('height', CHeight);
+        let C_image = d3.select('#C2').append('svg')
+            .attr('id', 'svg_under_C2')
+            .attr('width', C2Width).attr('height', CHeight);
 
         let image_margin = 10;
         let value = document.getElementById('num_c_image_slider').value;
-        shift = 425 / 11 * parseInt((11-value)/2);
+        let shift = 425 / 11 * parseInt((11 - value) / 2);
 
         C_image.append('g')
             .attr('id', 'mxn_g')
             .attr('transform', translate(2 * image_margin, 2 * image_margin))
-            .attr('width', C3Width - 2 * image_margin)
+            .attr('width', C2Width - 2 * image_margin)
             .attr('height', CHeight - 2 * image_margin);
 
         let CyAxis = C_image.append('g')
@@ -853,12 +867,12 @@
         CxAxis.selectAll('text').data([...Array(parseInt(value)).keys()])
             .enter().append('text')
             .attr('transform', d => translate(shift + 425 / 11 * d, 0))
-            .text(d => (d<=(parseInt(value/2))?"":"+") + (params.delta * (d - parseInt(value/2))).toFixed(2))
+            .text(d => (d <= (parseInt(value / 2)) ? "" : "+") + (params.delta * (d - parseInt(value / 2))).toFixed(2))
             .style('font-size', 'small');
 
     }
 
-    function updateSectionC3(_data) {
+    function updateSectionC2(_data) {
         if (_data !== undefined) {
             update(_data);
         } else {
@@ -882,11 +896,6 @@
                     return response.json();
                 }
             )
-            // width = 445 / vis_C_length;
-            // height = 390 / num_latent;
-
-
-
             res.then((data) => {
                 update(data)
             })
@@ -896,11 +905,9 @@
             updateSectionC1(data);
             data = data.content.linear;
 
-
-            width = 425 / 11;
-            height = 370 / num_latent;
-
-            shift = 425 / 11 * parseInt((11-document.getElementById('num_c_image_slider').value)/2);
+            let width = 425 / 11;
+            let height = 370 / num_latent;
+            let shift = 425 / 11 * parseInt((11 - document.getElementById('num_c_image_slider').value) / 2);
 
             console.log(width, height, shift)
 
@@ -912,8 +919,8 @@
             image_areas.enter().append('svg:image')
                 .merge(image_areas)
                 .attr('xlink:href', d => 'data:image/jpg;base64,' + d.img)
-                .attr('width', width-1)
-                .attr('height', height-1)
+                .attr('width', width - 1)
+                .attr('height', height - 1)
                 .attr('transform', (d, i) =>
                     translate(
                         shift + width * (i % vis_C_length),
@@ -923,19 +930,15 @@
                     latent_values = d.latent.map(x => x.toFixed(3).toString());
                     updateSectionB1(event, d);
                     updateSectionB2();
-                    updateSectionC3();
+                    updateSectionC2();
                 })
                 .on('mouseenter', function (event, d) {
-                    d3.select(this).style('outline','1px solid red');
+                    d3.select(this).style('outline', '1px solid red');
                 })
                 .on('mouseleave', function (event, d) {
-                    d3.select(this).style('outline','none');
+                    d3.select(this).style('outline', 'none');
                 })
         }
-    }
-
-    function update_image_area(data){
-
     }
 
 </script>
