@@ -1,6 +1,6 @@
 # High-Dimensional Latent Space Visualization
 
-![overview](overview.PNG)
+![overview](imgs/overview.PNG)
 
 ### Environment (Recommended)
 - Frontend
@@ -44,4 +44,23 @@ const port = '(BACKEND_PORT)';
 python3 -m http.server (FRONTEND_PORT)
 ```
 
-### Temp
+### How to Use
+#### TSNE visualization
+
+<img src="imgs/TSNE.PNG" style="width:200">
+
+#### Tiled traversal
+
+<img src="imgs/tiled.PNG" style="width:200">
+
+#### User Drawing
+
+<img src="imgs/draw.PNG" style="width:200">
+
+#### Linear traversal
+
+<img src="imgs/linearly.PNG" style="width:200">
+
+#### Parameter configuration
+
+<img src="imgs/configure.PNG" style="width:200">
