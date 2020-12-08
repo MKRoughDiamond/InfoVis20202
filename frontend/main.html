@@ -8,6 +8,7 @@
     <style type="text/css"></style>
 </head>
 <body style="width: 1350px;margin: auto;overflow: hidden">
+<div id="cover-spin"></div>
 <div style="width: 1300px;float: left;margin-left:20px">
     <div style="float: left">
         <h3 class="w3-text-teal">High-Dimensional Latent Space Visualization</h3>
@@ -210,6 +211,9 @@
     }
 
     function updateSectionA(isInit = false, onlyA = false) {
+        if(isInit)
+            displayLoadingScreen(true);
+
         tsne = fetch(url, {
             method: "POST",
             body: JSON.stringify({opcode: 'tsne', content: []})
@@ -287,6 +291,8 @@
                 }
                 updateSectionC2();
             }
+
+            setTimeout(function() { displayLoadingScreen(false); }, 100)
         });
     }
 
@@ -568,6 +574,7 @@
         let num_row_b_image_slider = document.getElementById('num_row_b_image_slider');
         let num_row_b_image_text = document.getElementById('num_row_b_image_text');
         num_row_b_image_slider.onchange = function () {
+            displayLoadingScreen(true);
             num_row_B_image = parseInt(num_row_b_image_slider.value);
 
             fetch(url, {
@@ -588,6 +595,7 @@
                     console.log('set vis_B_shape');
                     makeSectionB2();
                     updateSectionB2();
+                    displayLoadingScreen(false);
                     return response.json();
                 }
             );
@@ -599,6 +607,7 @@
         let num_c_image_slider = document.getElementById('num_c_image_slider');
         let num_c_image_text = document.getElementById('num_c_image_text');
         num_c_image_slider.onchange = function () {
+            displayLoadingScreen(true);
             vis_C_length = parseInt(num_c_image_slider.value);
 
             fetch(url, {
@@ -619,6 +628,7 @@
                     console.log('set vis_C_length');
                     makeSectionC2();
                     updateSectionC2();
+                    displayLoadingScreen(false);
                     return response.json();
                 }
             );
@@ -630,6 +640,7 @@
         let delta_slider = document.getElementById('delta_slider');
         let delta_text = document.getElementById('delta_text');
         delta_slider.onchange = function () {
+            displayLoadingScreen(true);
             let delta = parseFloat(delta_slider.value);
 
             fetch(url, {
@@ -650,6 +661,7 @@
                     console.log('set delta');
                     updateSectionB2();
                     updateSectionC2();
+                    displayLoadingScreen(false);
                     return response.json();
                 }
             );
@@ -661,6 +673,7 @@
         let tsne_slider = document.getElementById('tsne_slider');
         let tsne_text = document.getElementById('tsne_text');
         tsne_slider.onchange = function () {
+            displayLoadingScreen(true);
             let tsne_length = parseInt(tsne_slider.value);
 
             fetch(url, {
@@ -680,6 +693,7 @@
                     }
                     console.log('set tsne_length');
                     updateSectionA(false, true);
+                    // displayLoadingScreen(false);   // 시간차문제로 updateSectionA()에서 호출됨. 코드 꼬이지만 쩔수
                     return response.json();
                 }
             );
@@ -699,6 +713,7 @@
         });
         checkbox.disabled = true;
 
+        displayLoadingScreen(true);
         fetch(url, {
             method: "POST",
             body: JSON.stringify({
@@ -715,10 +730,11 @@
                     return;
                 }
                 console.log('set model_name');
+                updateSectionA();
+                // displayLoadingScreen(false);  // 시간차문제로 updateSectionA()에서 호출됨. 코드 꼬이지만 쩔수
                 return response.json();
             }
         );
-        updateSectionA();
     }
 
     /* Section C */
@@ -967,6 +983,14 @@
                     d3.select(this).style('outline', 'none');
                 })
         }
+    }
+
+    // 화면 로딩
+    function displayLoadingScreen(enable=true) {
+        if(enable)
+            document.getElementById('cover-spin').style.display = "block";
+        else
+            document.getElementById('cover-spin').style.display = "none";
     }
 
 </script>
