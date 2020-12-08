@@ -543,12 +543,24 @@
             data = data.content.tile;
 
             let nxn_g = d3.select('#nxn_g');
+
+            nxn_g
+                .append('rect')
+                .attr('id', 'B1rect')
+                .attr('x', B2_image_WH * num_b-1)
+                .attr('y', B2_image_WH * num_b-1)
+                .attr('width', B2_image_WH)
+                .attr('height', B2_image_WH)
+                .style('fill', 'none')
+                .attr('stroke', '#0000ff')
+                .attr('stroke-width', '2');
+
             let image_areas = nxn_g.selectAll('image').data(data);
             image_areas.enter().append('svg:image')
                 .merge(image_areas)
                 .attr('xlink:href', d => 'data:image/jpg;base64,' + d.img)
-                .attr('width', B2_image_WH - 1)
-                .attr('height', B2_image_WH - 1)
+                .attr('width', B2_image_WH - 2)
+                .attr('height', B2_image_WH - 2)
                 .attr('transform', (d, i) =>
                     translate(
                         B2_image_WH * (i % num_row_B_image),
@@ -566,6 +578,7 @@
                 .on('mouseleave', function (event, d) {
                     d3.select(this).style('outline', 'none');
                 })
+
         }
     }
 
@@ -868,47 +881,47 @@
             .attr('width', C2Width).attr('height', CHeight);
 
 
-        let image_margin = 10;
         let num_c = document.getElementById('num_c_image_slider').value;
         let scale = document.getElementById('delta_slider').value;
-        let shift = 425 / 11 * parseInt((11 - num_c) / 2);
+        let shift = 396 / 11 * parseInt((11 - num_c) / 2);
 
         console.log('scale:', scale)
 
         C_image.append('g')
             .attr('id', 'mxn_g')
-            .attr('transform', translate(2 * image_margin, 2 * image_margin))
-            .attr('width', C2Width - 2 * image_margin)
-            .attr('height', CHeight - 2 * image_margin);
+            .attr('transform', translate(30, 22))
+            .attr('width', C2Width - 20)
+            .attr('height', CHeight - 20);
 
         let CyAxis = C_image.append('g')
             .attr('id', 'CyAxis')
-            .attr('transform', translate(shift, 45));
+            .attr('transform', translate(shift+9, 46));
 
         CyAxis.selectAll('text').data([...Array(10).keys()]).enter().append('text')
-            .attr('transform', d => translate(0, 370 / 10 * d))
+            .attr('transform', d => translate(0, 360 / 10 * d))
             .text(d => String.fromCharCode(65 + d));
 
         let CxAxis = C_image.append('g')
             .attr('id', 'CxAxis')
-            .attr('transform', translate(20, 15));
+            .attr('transform', translate(30, 17));
 
 
         CxAxis.selectAll('text').data([...Array(parseInt(num_c)).keys()])
             .enter().append('text')
-            .attr('transform', d => translate(shift + 425 / 11 * d, 0))
+            .attr('transform', d => translate(shift + 396 / 11 * d, 0))
             .text(d => (d <= (parseInt(num_c / 2)) ? "" : "+") + (scale * (d - parseInt(num_c / 2))).toFixed(2))
             .style('font-size', 'small');
 
         d3.select('#mxn_g')
             .append('rect')
-            .attr('x', 425 / 11 * 5)
-            // .attr('y', 45)
-            .attr('width', 425 / 11)
-            .attr('height', 370)
+            .attr('id', 'C2rect')
+            .attr('x', 396 / 11 * 5 - 1)
+            .attr('y', 0)
+            .attr('width', 396 / 11)
+            .attr('height', 360 - 2)
             .style('fill', 'none')
             .attr('stroke', '#0000ff')
-            .attr('stroke-width', '3')
+            .attr('stroke-width', '2')
 
     }
 
@@ -945,9 +958,9 @@
             updateSectionC1(data);
             data = data.content.linear;
 
-            let width = 425 / 11;
-            let height = 370 / num_latent;
-            let shift = 425 / 11 * parseInt((11 - document.getElementById('num_c_image_slider').value) / 2);
+            let width = 396 / 11;
+            let height = 360 / num_latent;
+            let shift = 396 / 11 * parseInt((11 - document.getElementById('num_c_image_slider').value) / 2);
 
             let num_c = document.getElementById('num_c_image_slider').value;
             let scale = document.getElementById('delta_slider').value;
@@ -959,7 +972,7 @@
 
             console.log(width, height, shift)
 
-            d3.select('#CyAxis').attr('transform', translate(shift, 45))
+            d3.select('#CyAxis').attr('transform', translate(shift+9, 46))
 
             d3.select('#CxAxis').selectAll('text')
                 .text(d => (d <= (parseInt(num_c / 2)) ? "" : "+") + (scale * (d - parseInt(num_c / 2))).toFixed(2));
@@ -975,8 +988,8 @@
             image_areas.enter().append('svg:image')
                 .merge(image_areas)
                 .attr('xlink:href', d => 'data:image/jpg;base64,' + d.img)
-                .attr('width', width - 1)
-                .attr('height', height - 1)
+                .attr('width', width - 2)
+                .attr('height', height - 2)
                 .attr('transform', (d, i) =>
                     translate(
                         shift + width * (i % vis_C_length),
