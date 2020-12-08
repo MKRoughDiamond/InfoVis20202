@@ -53,7 +53,8 @@
                     <button id="draw_image" class="c-button" value='0' title="draw image">
                         <image src="image/draw.png" width="40" height="40"></image>
                     </button>
-                    <button id="clear" class="c-button c-button-red" style="margin-top: 10px; display: none">clear</button>
+                    <button id="clear" class="c-button c-button-red" style="margin-top: 10px; display: none">clear
+                    </button>
                     <button id="undo" class="c-button c-button-green" style="display: none">undo</button>
                     <button id="redo" class="c-button c-button-blue" style="display: none">redo</button>
 
@@ -447,7 +448,8 @@
         B_image.append('text').attr('id', 'B_xAxis').attr('transform', translate(ABHeight / 2 + 15, 35)).text(String.fromCharCode(65 + target_idx[0]));
 
         // latent variable의 최소/최대값 표시
-        let value = (params.delta * 2).toFixed(2);
+        let scale = document.getElementById('delta_slider').value;
+        let value = parseFloat(scale).toFixed(2);
         B_image.append('text').attr('id', 'B_yAxis_min').attr('transform', translate(5, 65)).text('-' + value);
         B_image.append('text').attr('id', 'B_yAxis_max').attr('transform', translate(5, ABHeight - 20)).text(value);
         B_image.append('text').attr('id', 'B_xAxis_min').attr('transform', translate(50, 35)).text('-' + value);
@@ -461,7 +463,6 @@
             .attr('id', 'nxn_g')
             .attr('transform', translate(50, 50))
             .attr('width', wh).attr('height', wh);
-
     }
 
     function updateSectionB1(event, d) {
@@ -483,11 +484,13 @@
         d3.select('#B_yAxis').text(String.fromCharCode(65 + parseInt(target_idx[1])));
         d3.select('#B_xAxis').text(String.fromCharCode(65 + parseInt(target_idx[0])));
 
-        let num = (params.delta * parseInt(parseInt(document.getElementById('num_row_b_image_slider').value) / 2)).toFixed(2);
-        d3.select('#B_yAxis_min').text('-' + num);
-        d3.select('#B_yAxis_max').text(num);
-        d3.select('#B_xAxis_min').text('-' + num);
-        d3.select('#B_xAxis_max').text(num);
+        let scale = document.getElementById('delta_slider').value;
+        let value = parseFloat(scale).toFixed(2);
+
+        d3.select('#B_yAxis_min').text('-' + value);
+        d3.select('#B_yAxis_max').text(value);
+        d3.select('#B_xAxis_min').text('-' + value);
+        d3.select('#B_xAxis_max').text(value);
 
 
         if (target_idx.length !== 2) {
@@ -842,8 +845,11 @@
             .attr('width', C2Width).attr('height', CHeight);
 
         let image_margin = 10;
-        let value = document.getElementById('num_c_image_slider').value;
-        let shift = 425 / 11 * parseInt((11 - value) / 2);
+        let num_c = document.getElementById('num_c_image_slider').value;
+        let scale = document.getElementById('delta_slider').value;
+        let shift = 425 / 11 * parseInt((11 - num_c) / 2);
+
+        console.log('scale:', scale)
 
         C_image.append('g')
             .attr('id', 'mxn_g')
@@ -860,14 +866,14 @@
             .text(d => String.fromCharCode(65 + d));
 
         let CxAxis = C_image.append('g')
-            .attr('id', 'CyAxis')
+            .attr('id', 'CxAxis')
             .attr('transform', translate(20, 15));
 
 
-        CxAxis.selectAll('text').data([...Array(parseInt(value)).keys()])
+        CxAxis.selectAll('text').data([...Array(parseInt(num_c)).keys()])
             .enter().append('text')
             .attr('transform', d => translate(shift + 425 / 11 * d, 0))
-            .text(d => (d <= (parseInt(value / 2)) ? "" : "+") + (params.delta * (d - parseInt(value / 2))).toFixed(2))
+            .text(d => (d <= (parseInt(num_c / 2)) ? "" : "+") + ((scale / 2) * (d - parseInt(num_c / 2))).toFixed(2))
             .style('font-size', 'small');
 
     }
@@ -909,9 +915,24 @@
             let height = 370 / num_latent;
             let shift = 425 / 11 * parseInt((11 - document.getElementById('num_c_image_slider').value) / 2);
 
+            let num_c = document.getElementById('num_c_image_slider').value;
+            let scale = document.getElementById('delta_slider').value;
+            console.log('asdf', typeof scale, scale)
+
+            let value = parseFloat(scale).toFixed(2);
+            console.log('value', value)
+
             console.log(width, height, shift)
 
             d3.select('#CyAxis').attr('transform', translate(shift, 45))
+
+            d3.select('#CxAxis').selectAll('text')
+                .text(d => (d <= (parseInt(num_c / 2)) ? "" : "+") + ((scale / 2) * (d - parseInt(num_c / 2))).toFixed(2));
+
+            d3.select('#B_yAxis_min').text('-' + value);
+            d3.select('#B_yAxis_max').text(value);
+            d3.select('#B_xAxis_min').text('-' + value);
+            d3.select('#B_xAxis_max').text(value);
 
             let mxn_g = d3.select('#mxn_g');
 
