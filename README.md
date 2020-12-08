@@ -50,18 +50,18 @@ python3 -m http.server (FRONTEND_PORT)
 - Hover : shows reconstructed image
 - Click : get latent vector of selected point, update all
 
-<div width="600px" style="margin:auto">
+<p width="600px" align="center">
     <img src="imgs/TSNE.PNG" width="400px">
-</div>
+</p>
 
 #### Tiled traversal
 - 2D latent traversal on two selected dimensions
 - Can choose a dimension pair, can modify values of other dimensions
 - Click on image : get latent vector of selected image, update all
 
-<div width="600px" style="margin:auto">
+<p width="600px" align="center">
     <img src="imgs/tiled.PNG" width="800px">
-</div>
+</p>
 
 #### User Drawing
 - Shows current reconstructed image and user can upload new data
@@ -69,17 +69,17 @@ python3 -m http.server (FRONTEND_PORT)
 - Drawing : use can draw a new image
 - Send to backend : get latent vector of a new image, update all
 
-<div width="600px" style="margin:auto">
+<p width="600px" align="center">
     <img src="imgs/draw.PNG" width="400px">
-</div>
+</p>
 
 #### Linear traversal
 - 1D latent traversal on each dimension
 - Click on image : get latent vector of selected image, update all
 
-<div width="600px" style="margin:auto">
+<p width="600px" align="center">
     <img src="imgs/linearly.PNG" width="400px">
-</div>
+</p>
 
 #### Parameter configuration
 - Can modify several parameters
@@ -88,6 +88,6 @@ python3 -m http.server (FRONTEND_PORT)
 - Traversal scale : change the difference between adjacent images
 - Select model : change the target model
 
-<div width="600px" style="margin:auto">
+<p width="600px" align="center">
     <img src="imgs/configure.PNG" width="400px">
-</div>
+</p>
