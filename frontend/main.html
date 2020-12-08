@@ -53,15 +53,15 @@
                     <button id="draw_image" class="c-button" value='0' title="draw image">
                         <image src="image/draw.png" width="40" height="40"></image>
                     </button>
-                    <button id="update_image" class="c-button" style="margin-top: 200px" title="analyze image">
+                    <button id="clear" class="c-button c-button-red" style="margin-top: 10px; display: none">clear</button>
+                    <button id="undo" class="c-button c-button-green" style="display: none">undo</button>
+                    <button id="redo" class="c-button c-button-blue" style="display: none">redo</button>
+
+                    <button id="update_image" class="c-button" style="margin-top: 50px" title="analyze image">
                         <image src="image/update.png" width="40" height="40"></image>
                     </button>
                 </div>
                 <div style="width: 50px; float: right; padding-top: 10px">
-                    <button id="clear" class="c-button c-button-red" style="margin-top: 48px; display: none">clear
-                    </button>
-                    <button id="undo" class="c-button c-button-green" style="display: none">undo</button>
-                    <button id="redo" class="c-button c-button-blue" style="display: none">redo</button>
                 </div>
             </div>
             <div class="w3-border" id="C2"
@@ -178,8 +178,8 @@
     let B2_image_WH = 68; // sectionB2의 1개의 이미지 크기(5x5일 때 68x68 pixel)
 
     let drawingCanvas;
-    let drawingCanvasWidth = 344;
-    let drawingCanvasHeight = 344;
+    let drawingCanvasWidth = 374;
+    let drawingCanvasHeight = 374;
 
     fetch(url, {
         method: "GET"
