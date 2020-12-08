@@ -1,5 +1,7 @@
 # High-Dimensional Latent Space Visualization
 
+![overview](overview.PNG)
+
 ### Environment (Recommended)
 - Frontend
   - d3.js
